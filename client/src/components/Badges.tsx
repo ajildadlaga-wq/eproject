@@ -37,13 +37,30 @@ export function RiskStatusBadge({ value }: { value: RiskStatus }) {
 }
 
 const TASK_STATUS_STYLES: Record<TaskStatus, string> = {
-  NOT_STARTED: "bg-slate-100 text-slate-600",
-  IN_PROGRESS: "bg-brand-100 text-brand-700",
-  BLOCKED: "bg-rose-100 text-rose-700",
-  DONE: "bg-emerald-100 text-emerald-700",
+  DRAFT: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+  ASSIGNED: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+  IN_PROGRESS: "bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200",
+  BLOCKED: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300",
+  COMPLETED: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300",
+  UNDER_REVIEW: "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
+  APPROVED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+  REJECTED: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300",
+};
+
+/** Only APPROVED gets the tick — nothing else is finished. */
+const TASK_STATUS_MARK: Partial<Record<TaskStatus, string>> = {
+  UNDER_REVIEW: "◷",
+  APPROVED: "✓",
+  REJECTED: "↩",
 };
 
 export function TaskStatusBadge({ value }: { value: TaskStatus }) {
   const { t } = useT();
-  return <span className={`badge ${TASK_STATUS_STYLES[value]}`}>{t("tstatus." + value)}</span>;
+  const mark = TASK_STATUS_MARK[value];
+  return (
+    <span className={`badge ${TASK_STATUS_STYLES[value]}`}>
+      {mark && <span aria-hidden="true">{mark}</span>}
+      {t("tstatus." + value)}
+    </span>
+  );
 }

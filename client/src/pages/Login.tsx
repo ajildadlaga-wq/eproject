@@ -7,9 +7,9 @@ import { supabase } from "../lib/supabase";
 import { Logo, LogoMark } from "../components/Brand";
 
 const DEMO: [string, string][] = [
-  ["admin@pms.local", "SUPER_ADMIN"],
+  ["admin@pms.local", "ADMIN"],
   ["pm@pms.local", "PROJECT_MANAGER"],
-  ["editor@pms.local", "EDITOR"],
+  ["editor@pms.local", "TEAM_MEMBER"],
   ["viewer@pms.local", "VIEWER"],
 ];
 

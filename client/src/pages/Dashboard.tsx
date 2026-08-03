@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ViewMode } from "gantt-task-react";
 import { api } from "../lib/api";
-import { weightedProgress } from "../lib/types";
+import { isOpen, weightedProgress } from "../lib/types";
 import type { Task } from "../lib/types";
 import GanttChart, { GanttItem } from "../components/GanttChart";
 import { ProgressBar } from "../components/ui";
@@ -46,7 +46,7 @@ export default function Dashboard() {
     return m;
   }, [allTasks]);
 
-  const overdue = (t: Task) => t.status !== "DONE" && !!t.planned_end && t.planned_end < today;
+  const overdue = (t: Task) => isOpen(t) && !!t.planned_end && t.planned_end < today;
 
   const rows = (projects ?? []).map((p) => {
     const tasks = byProject.get(p.id) ?? [];

@@ -1,4 +1,4 @@
-export type Role = "SUPER_ADMIN" | "PROJECT_MANAGER" | "EDITOR" | "VIEWER";
+export type Role = "ADMIN" | "PROJECT_MANAGER" | "TEAM_MEMBER" | "VIEWER";
 export type SdlcPhase =
   | "REQUIREMENTS" | "DEVELOPMENT" | "UAT" | "SYSTEM_TESTING" | "STAGING" | "DEPLOYMENT";
 export type Priority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -6,7 +6,29 @@ export type RequirementType = "BUSINESS" | "FUNCTIONAL" | "NON_FUNCTIONAL";
 export type RequirementStatus = "DRAFT" | "BASELINED" | "APPROVED" | "IMPLEMENTED" | "VERIFIED";
 export type RiskCategory = "TECHNICAL" | "SCHEDULE" | "COST" | "RESOURCE" | "SCOPE" | "EXTERNAL";
 export type RiskStatus = "OPEN" | "MITIGATING" | "CLOSED";
-export type TaskStatus = "NOT_STARTED" | "IN_PROGRESS" | "BLOCKED" | "DONE";
+/**
+ * DRAFT → ASSIGNED → IN_PROGRESS → COMPLETED → UNDER_REVIEW
+ *                                        → APPROVED | REJECTED
+ * BLOCKED sits outside the happy path — work can stall at any point.
+ */
+export type TaskStatus =
+  | "DRAFT" | "ASSIGNED" | "IN_PROGRESS" | "BLOCKED"
+  | "COMPLETED" | "UNDER_REVIEW" | "APPROVED" | "REJECTED";
+
+export const TASK_STATUSES: TaskStatus[] = [
+  "DRAFT", "ASSIGNED", "IN_PROGRESS", "BLOCKED",
+  "COMPLETED", "UNDER_REVIEW", "APPROVED", "REJECTED",
+];
+
+/** Statuses a manager may set directly when creating or editing a task. */
+export const ASSIGNABLE_STATUSES: TaskStatus[] = ["DRAFT", "ASSIGNED", "IN_PROGRESS", "BLOCKED"];
+
+/** Approved work is finished work; nothing else counts towards progress. */
+export const isApproved = (t: { status: TaskStatus }) => t.status === "APPROVED";
+/** Waiting on the manager. */
+export const isAwaitingReview = (t: { status: TaskStatus }) => t.status === "UNDER_REVIEW";
+/** Still open — used for the overdue check. */
+export const isOpen = (t: { status: TaskStatus }) => t.status !== "APPROVED";
 
 export const SDLC_PHASES: SdlcPhase[] = [
   "REQUIREMENTS", "DEVELOPMENT", "UAT", "SYSTEM_TESTING", "STAGING", "DEPLOYMENT",
@@ -47,10 +69,14 @@ export interface Task {
   percent_complete: number; status: TaskStatus; depends_on: string[];
   assignee_id: string | null; sprint_name: string | null; phase: SdlcPhase | null;
   priority: Priority;
+  submitted_at: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;   // required when a task is sent back
   assignee?: { full_name: string | null } | null; // joined
 }
 
-export type MemberRole = "EDITOR" | "VIEWER";
+export type MemberRole = "TEAM_MEMBER" | "VIEWER";
 
 export interface TaskUpdate {
   id: string; task_id: string; project_id: string;
@@ -70,11 +96,18 @@ export const PRIORITY_WEIGHT: Record<Priority, number> = {
   LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 3,
 };
 
-export function weightedProgress(tasks: { percent_complete: number; priority: Priority }[]): number {
+/**
+ * Project progress counts approved work only.
+ *
+ * A task the assignee has marked finished but the manager has not signed off
+ * contributes nothing. That is the rule the whole system exists to enforce, so
+ * a task sitting at 100% in review still reads as 0% here — deliberately.
+ */
+export function weightedProgress(tasks: { status: TaskStatus; priority: Priority }[]): number {
   if (tasks.length === 0) return 0;
   const w = (p: Priority) => PRIORITY_WEIGHT[p] ?? 2; // default weight if priority missing
   const totalW = tasks.reduce((s, t) => s + w(t.priority), 0);
   if (totalW === 0) return 0;
-  const done = tasks.reduce((s, t) => s + w(t.priority) * t.percent_complete, 0);
-  return Math.round(done / totalW);
+  const approved = tasks.reduce((s, t) => s + (isApproved(t) ? w(t.priority) : 0), 0);
+  return Math.round((100 * approved) / totalW);
 }

@@ -67,12 +67,24 @@ export function useAuth() {
   return ctx;
 }
 
-/** Roles allowed to create/edit content (editors and up). */
+/**
+ * The admin administers the system, not the projects: users, roles and
+ * project ownership are theirs; everything inside a project is read-only.
+ * These helpers gate the UI — the database enforces the same split via RLS,
+ * so hiding a button is a courtesy, not the security boundary.
+ */
+
+/** Roles allowed to create or edit project content. */
 export const canWrite = (role: Role | null) =>
-  role === "SUPER_ADMIN" || role === "PROJECT_MANAGER" || role === "EDITOR";
+  role === "PROJECT_MANAGER" || role === "TEAM_MEMBER";
 
-/** Roles allowed to manage projects (create/delete). */
-export const canManageProjects = (role: Role | null) =>
-  role === "SUPER_ADMIN" || role === "PROJECT_MANAGER";
+/** Only project managers own projects. */
+export const canManageProjects = (role: Role | null) => role === "PROJECT_MANAGER";
 
-export const isAdmin = (role: Role | null) => role === "SUPER_ADMIN";
+/** Approving work is reserved for the manager who inspected it. */
+export const canApprove = (role: Role | null) => role === "PROJECT_MANAGER";
+
+export const isAdmin = (role: Role | null) => role === "ADMIN";
+
+/** Strictly read-only: viewers, and admins inside a project. */
+export const isReadOnly = (role: Role | null) => role === "VIEWER" || role === "ADMIN";

@@ -28,7 +28,7 @@ describe.skipIf(!url || !anon)("flow: login → dashboard", () => {
     // 2. Profile + role (what AuthContext does)
     const { data: profile } = await c.from("profiles")
       .select("id, full_name, role").eq("id", auth.user!.id).single();
-    expect(profile?.role).toBe("SUPER_ADMIN");
+    expect(profile?.role).toBe("ADMIN");
 
     // 3. Portfolio data (what Dashboard does)
     const { data: projects } = await c.from("projects").select("*");

@@ -53,13 +53,13 @@ describe.skipIf(!url || !anon)("RLS: VIEWER is strictly read-only", () => {
   it("cannot escalate their own role (guard trigger)", T, async () => {
     const c = await loginAs("viewer@pms.local");
     const uid = (await c.auth.getUser()).data.user!.id;
-    const { error } = await c.from("profiles").update({ role: "SUPER_ADMIN" }).eq("id", uid);
+    const { error } = await c.from("profiles").update({ role: "ADMIN" }).eq("id", uid);
     expect(error).not.toBeNull();
     expect(error!.message).toMatch(/Super Admin/i);
   });
 });
 
-describe.skipIf(!url || !anon)("RLS: EDITOR can write content but not delete", () => {
+describe.skipIf(!url || !anon)("RLS: TEAM_MEMBER can write content but not delete", () => {
   it("can insert a risk, cannot delete it; PM can (cleanup)", T, async () => {
     const editor = await loginAs("editor@pms.local");
     const { data: created, error: insErr } = await editor.from("risks").insert({
@@ -90,7 +90,7 @@ describe.skipIf(!url || !anon)("RLS: EDITOR can write content but not delete", (
     const c = await loginAs("editor@pms.local");
     const uid = (await c.auth.getUser()).data.user!.id;
     const { error } = await c.from("project_members")
-      .upsert({ project_id: APOLLO, user_id: uid, member_role: "EDITOR" });
+      .upsert({ project_id: APOLLO, user_id: uid, member_role: "TEAM_MEMBER" });
     expect(error).not.toBeNull();
   });
 });

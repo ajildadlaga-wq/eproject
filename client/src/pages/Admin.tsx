@@ -4,7 +4,7 @@ import { api } from "../lib/api";
 import { useT } from "../i18n/LanguageContext";
 import type { Role } from "../lib/types";
 
-const ROLES: Role[] = ["SUPER_ADMIN", "PROJECT_MANAGER", "EDITOR", "VIEWER"];
+const ROLES: Role[] = ["ADMIN", "PROJECT_MANAGER", "TEAM_MEMBER", "VIEWER"];
 
 export default function Admin() {
   const qc = useQueryClient();

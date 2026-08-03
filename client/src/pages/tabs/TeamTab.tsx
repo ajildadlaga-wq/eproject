@@ -13,7 +13,7 @@ export default function TeamTab({ projectId, canManage }: { projectId: string; c
   const { data: profiles } = useQuery({ queryKey: ["profiles"], queryFn: api.listProfiles, enabled: canManage });
 
   const [userId, setUserId] = useState("");
-  const [role, setRole] = useState<MemberRole>("EDITOR");
+  const [role, setRole] = useState<MemberRole>("TEAM_MEMBER");
 
   const add = useMutation({
     mutationFn: () => api.addMember(projectId, userId, role),
@@ -25,7 +25,7 @@ export default function TeamTab({ projectId, canManage }: { projectId: string; c
   });
 
   const memberIds = new Set((members ?? []).map((m) => m.user_id));
-  const candidates = (profiles ?? []).filter((p) => !memberIds.has(p.id) && p.role !== "SUPER_ADMIN");
+  const candidates = (profiles ?? []).filter((p) => !memberIds.has(p.id) && p.role !== "ADMIN");
 
   return (
     <div className="space-y-3">
@@ -46,7 +46,7 @@ export default function TeamTab({ projectId, canManage }: { projectId: string; c
           <div className="md:col-span-2">
             <label className="label">{t("team.projectRole")}</label>
             <select className="input" value={role} onChange={(e) => setRole(e.target.value as MemberRole)}>
-              <option value="EDITOR">{t("team.editorCap")}</option>
+              <option value="TEAM_MEMBER">{t("team.editorCap")}</option>
               <option value="VIEWER">{t("team.viewerCap")}</option>
             </select>
           </div>
@@ -73,7 +73,7 @@ export default function TeamTab({ projectId, canManage }: { projectId: string; c
                 </td>
                 <td className="text-slate-500">{m.profile?.role ? t("role." + m.profile.role) : "—"}</td>
                 <td>
-                  <span className={`badge ${m.member_role === "EDITOR" ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-600"}`}>
+                  <span className={`badge ${m.member_role === "TEAM_MEMBER" ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-600"}`}>
                     {m.member_role}
                   </span>
                 </td>

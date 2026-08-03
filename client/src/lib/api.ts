@@ -104,6 +104,32 @@ export const api = {
     if (error) throw new Error(error.message);
   },
 
+  // ---- approval workflow ----
+  // Each transition is a database function, so the rules ("only the assignee
+  // submits", "only the manager approves") hold even if someone calls the
+  // REST API directly.
+  async submitTask(taskId: string, note?: string): Promise<void> {
+    const { error } = await supabase.rpc("submit_task", {
+      p_task_id: taskId,
+      p_note: note ?? null,
+    });
+    if (error) throw new Error(error.message);
+  },
+  async approveTask(taskId: string, note?: string): Promise<void> {
+    const { error } = await supabase.rpc("approve_task", {
+      p_task_id: taskId,
+      p_note: note ?? null,
+    });
+    if (error) throw new Error(error.message);
+  },
+  async rejectTask(taskId: string, reason: string): Promise<void> {
+    const { error } = await supabase.rpc("reject_task", {
+      p_task_id: taskId,
+      p_reason: reason,
+    });
+    if (error) throw new Error(error.message);
+  },
+
   // ---- audit trail ----
   async listTaskUpdates(projectId: string): Promise<TaskUpdate[]> {
     return check(await supabase.from("task_updates").select("*").eq("project_id", projectId)

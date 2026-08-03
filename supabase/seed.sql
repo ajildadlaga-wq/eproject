@@ -17,9 +17,9 @@ declare
 begin
   for u in
     select * from (values
-      (admin_id,  'admin@pms.local',  'Ada Admin',     'SUPER_ADMIN'),
+      (admin_id,  'admin@pms.local',  'Ada Admin',     'ADMIN'),
       (pm_id,     'pm@pms.local',     'Pat Manager',   'PROJECT_MANAGER'),
-      (editor_id, 'editor@pms.local', 'Eddie Editor',  'EDITOR'),
+      (editor_id, 'editor@pms.local', 'Eddie Editor',  'TEAM_MEMBER'),
       (viewer_id, 'viewer@pms.local', 'Vic Viewer',    'VIEWER')
     ) as t(id, email, full_name, role)
   loop
@@ -85,13 +85,14 @@ insert into risks (project_id, title, description, category, probability, impact
   ('11111111-1111-1111-1111-111111111111', 'Third-party API deprecation', 'Payment gateway v1 sunset.', 'TECHNICAL', 3, 4, 'Tech Lead', 'Abstract integration layer.', 'MITIGATING'),
   ('11111111-1111-1111-1111-111111111111', 'Scope creep from stakeholders', 'Unbounded change requests.', 'SCOPE', 4, 4, 'Pat Manager', 'Change-control board.', 'OPEN');
 
--- Tasks (planned vs actual; T4 is overdue, T5 is blocked -> bottlenecks)
+-- Tasks. T3 is waiting on the manager, T4 was sent back with a reason, so the
+-- approval queue and the rework loop are both visible in the demo data.
 insert into tasks (id, project_id, name, planned_start, planned_end, actual_start, actual_end, percent_complete, status, depends_on, phase, sprint_name) values
-  ('0a000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Requirements gathering', current_date - 30, current_date - 22, current_date - 30, current_date - 21, 100, 'DONE', '{}', 'REQUIREMENTS', null),
-  ('0a000000-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'System design',          current_date - 21, current_date - 12, current_date - 21, current_date - 11, 100, 'DONE', array['0a000000-0000-0000-0000-000000000001']::uuid[], 'DEVELOPMENT', null),
-  ('0a000000-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111', 'Core development',        current_date - 11, current_date + 5,  current_date - 11, null, 40, 'IN_PROGRESS', array['0a000000-0000-0000-0000-000000000002']::uuid[], 'DEVELOPMENT', 'Sprint 3'),
-  ('0a000000-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111', 'Payment gateway integration', current_date - 8, current_date - 2, current_date - 8, null, 30, 'IN_PROGRESS', array['0a000000-0000-0000-0000-000000000002']::uuid[], 'DEVELOPMENT', 'Sprint 3'),
-  ('0a000000-0000-0000-0000-000000000005', '11111111-1111-1111-1111-111111111111', 'UAT preparation',        current_date + 3,  current_date + 10, null, null, 0, 'NOT_STARTED', array['0a000000-0000-0000-0000-000000000003','0a000000-0000-0000-0000-000000000004']::uuid[], 'UAT', null);
+  ('0a000000-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'Requirements gathering', current_date - 30, current_date - 22, current_date - 30, current_date - 21, 100, 'APPROVED', '{}', 'REQUIREMENTS', null),
+  ('0a000000-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'System design',          current_date - 21, current_date - 12, current_date - 21, current_date - 11, 100, 'APPROVED', array['0a000000-0000-0000-0000-000000000001']::uuid[], 'DEVELOPMENT', null),
+  ('0a000000-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111', 'Core development',        current_date - 11, current_date + 5,  current_date - 11, null, 100, 'UNDER_REVIEW', array['0a000000-0000-0000-0000-000000000002']::uuid[], 'DEVELOPMENT', 'Sprint 3'),
+  ('0a000000-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111', 'Payment gateway integration', current_date - 8, current_date - 2, current_date - 8, null, 30, 'REJECTED', array['0a000000-0000-0000-0000-000000000002']::uuid[], 'DEVELOPMENT', 'Sprint 3'),
+  ('0a000000-0000-0000-0000-000000000005', '11111111-1111-1111-1111-111111111111', 'UAT preparation',        current_date + 3,  current_date + 10, null, null, 0, 'ASSIGNED', array['0a000000-0000-0000-0000-000000000003','0a000000-0000-0000-0000-000000000004']::uuid[], 'UAT', null);
 
 -- Task priorities (drive weighted progress)
 update tasks set priority = 'HIGH'     where id = '0a000000-0000-0000-0000-000000000004'; -- Payment gateway integration
@@ -101,7 +102,7 @@ update tasks set priority = 'LOW'      where id in ('0a000000-0000-0000-0000-000
 
 -- Project membership for the demo project (editor + viewer).
 insert into project_members (project_id, user_id, member_role) values
-  ('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-0000000000c3', 'EDITOR'),
+  ('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-0000000000c3', 'TEAM_MEMBER'),
   ('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-0000000000d4', 'VIEWER')
 on conflict (project_id, user_id) do nothing;
 
@@ -126,17 +127,27 @@ from (values
   ('44444444-4444-4444-4444-444444444444'::uuid)
 ) as p(id)
 cross join (values
-  ('00000000-0000-0000-0000-0000000000c3'::uuid, 'EDITOR'::member_role),
+  ('00000000-0000-0000-0000-0000000000c3'::uuid, 'TEAM_MEMBER'::member_role),
   ('00000000-0000-0000-0000-0000000000d4'::uuid, 'VIEWER'::member_role)
 ) as m(user_id, role)
 on conflict (project_id, user_id) do nothing;
 
 insert into tasks (id, project_id, name, planned_start, planned_end, percent_complete, status, priority, phase) values
-  ('0b000000-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'Build onboarding flow', current_date - 40, current_date - 25, 100, 'DONE', 'HIGH', 'DEVELOPMENT'),
+  ('0b000000-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'Build onboarding flow', current_date - 40, current_date - 25, 100, 'APPROVED', 'HIGH', 'DEVELOPMENT'),
   ('0b000000-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222', 'Device QA matrix',      current_date - 20, current_date + 2,  60,  'IN_PROGRESS', 'MEDIUM', 'SYSTEM_TESTING'),
   ('0b000000-0000-0000-0000-000000000003', '22222222-2222-2222-2222-222222222222', 'Crash-free hardening',  current_date - 10, current_date - 3,  30,  'IN_PROGRESS', 'HIGH', 'SYSTEM_TESTING'),
-  ('0b000000-0000-0000-0000-000000000004', '33333333-3333-3333-3333-333333333333', 'ETL pipeline v2',       current_date - 55, current_date - 30, 100, 'DONE', 'HIGH', 'DEVELOPMENT'),
+  ('0b000000-0000-0000-0000-000000000004', '33333333-3333-3333-3333-333333333333', 'ETL pipeline v2',       current_date - 55, current_date - 30, 100, 'APPROVED', 'HIGH', 'DEVELOPMENT'),
   ('0b000000-0000-0000-0000-000000000005', '33333333-3333-3333-3333-333333333333', 'UAT sign-off',          current_date - 6,  current_date + 4,  45,  'IN_PROGRESS', 'CRITICAL', 'UAT'),
-  ('0b000000-0000-0000-0000-000000000006', '44444444-4444-4444-4444-444444444444', 'CMS migration',         current_date - 18, current_date - 6,  100, 'DONE', 'MEDIUM', 'DEVELOPMENT'),
+  ('0b000000-0000-0000-0000-000000000006', '44444444-4444-4444-4444-444444444444', 'CMS migration',         current_date - 18, current_date - 6,  100, 'APPROVED', 'MEDIUM', 'DEVELOPMENT'),
   ('0b000000-0000-0000-0000-000000000007', '44444444-4444-4444-4444-444444444444', 'Staging smoke tests',   current_date - 4,  current_date + 3,  20,  'IN_PROGRESS', 'HIGH', 'STAGING')
 on conflict (id) do nothing;
+
+-- Review metadata for the demo tasks above.
+update tasks set submitted_at = now() - interval '1 day'
+ where id = '0a000000-0000-0000-0000-000000000003';
+
+update tasks
+   set reviewed_by  = '00000000-0000-0000-0000-0000000000b2',
+       reviewed_at  = now() - interval '2 days',
+       review_note  = 'Sandbox credentials only — retest against the live gateway before resubmitting.'
+ where id = '0a000000-0000-0000-0000-000000000004';
