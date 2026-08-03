@@ -124,6 +124,10 @@ export const en: Dict = {
   "proj.startsAt": "It starts at the requirements phase.",
   "proj.created": "Project created.",
   "proj.none": "No projects yet.",
+  "proj.noMatch": "Nothing matches that.",
+  "proj.search": "Search projects…",
+  "proj.approvedOf": "{done} of {total} approved",
+  "proj.inReview": "{n} to review",
 
   // project detail / tabs / phases
   "tab.requirements": "Requirements",
@@ -355,6 +359,10 @@ export const mn: Dict = {
   "proj.startsAt": "Шаардлага тодорхойлох үе шатнаас эхэлнэ.",
   "proj.created": "Төсөл үүслээ.",
   "proj.none": "Төсөл алга.",
+  "proj.noMatch": "Тохирох төсөл олдсонгүй.",
+  "proj.search": "Төсөл хайх…",
+  "proj.approvedOf": "{total}-аас {done} батлагдсан",
+  "proj.inReview": "{n} хянуулахаар",
 
   "tab.requirements": "Шаардлага",
   "tab.risks": "Эрсдэл",
