@@ -31,6 +31,9 @@ alter table profiles
   )::app_role,
   alter column role set default 'VIEWER'::app_role;
 
+-- auth_role() returns app_role_old and would block the drop; nothing calls
+-- it after this migration (is_admin/can_manage_projects query profiles directly).
+drop function if exists auth_role();
 drop type app_role_old;
 
 -- Per-project membership uses the same vocabulary as the global roles.
