@@ -15,7 +15,7 @@ const STATUSES: TaskStatus[] = ["NOT_STARTED", "IN_PROGRESS", "BLOCKED", "DONE"]
 const PRIORITIES: Priority[] = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 
 const GROUPS: { status: TaskStatus; label: string; pill: string; dot: string }[] = [
-  { status: "IN_PROGRESS", label: "In Progress", pill: "bg-indigo-50 text-indigo-700", dot: "bg-indigo-500" },
+  { status: "IN_PROGRESS", label: "In Progress", pill: "bg-brand-50 text-brand-700", dot: "bg-brand-500" },
   { status: "BLOCKED",     label: "Blocked",     pill: "bg-rose-50 text-rose-700",     dot: "bg-rose-500" },
   { status: "NOT_STARTED", label: "Not Started", pill: "bg-slate-100 text-slate-600",  dot: "bg-slate-400" },
   { status: "DONE",        label: "Done",        pill: "bg-emerald-50 text-emerald-700", dot: "bg-emerald-500" },
@@ -154,7 +154,7 @@ function ProgressDialog({ projectId, task, requireReport, onClose }: {
             <span className="text-slate-500">{t("c.progress")}</span><span className="font-bold text-brand">{progress}%</span>
           </div>
           <input type="range" min={0} max={100} step={5} value={progress}
-            onChange={(e) => setProgress(Number(e.target.value))} className="w-full" style={{ accentColor: "#6366f1" }} />
+            onChange={(e) => setProgress(Number(e.target.value))} className="w-full" style={{ accentColor: "#1268EB" }} />
         </div>
         <div><label className="label">{t("task.whatChanged")}{requireReport && " *"}</label>
           <input className="input" value={what} onChange={(e) => setWhat(e.target.value)} /></div>

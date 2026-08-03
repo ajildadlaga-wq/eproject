@@ -1,9 +1,23 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Gantt, Task as GanttTask, ViewMode } from "gantt-task-react";
 import ErrorBoundary from "./ErrorBoundary";
 import { useT } from "../i18n/LanguageContext";
 import { formatDate, mnCalendarLabel } from "../i18n/date";
 import type { Lang } from "../i18n/translations";
+
+/** True below the Tailwind `sm` breakpoint (640px) — phones. */
+function useIsNarrow(): boolean {
+  const [narrow, setNarrow] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const on = (e: MediaQueryListEvent) => setNarrow(e.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return narrow;
+}
 
 export interface GanttItem {
   id: string;
@@ -72,6 +86,7 @@ export default function GanttChart({
 }) {
   const { lang } = useT();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const narrow = useIsNarrow();
 
   const ganttTasks = useMemo<GanttTask[]>(() => {
     return items
@@ -91,7 +106,7 @@ export default function GanttChart({
           dependencies: (it.dependencies ?? []).filter((d) => items.some((x) => x.id === d)),
           styles: it.highlight
             ? { backgroundColor: "#fca5a5", progressColor: "#ef4444", backgroundSelectedColor: "#f87171" }
-            : { backgroundColor: "#c7d2fe", progressColor: "#6366f1", backgroundSelectedColor: "#a5b4fc" },
+            : { backgroundColor: "#D0E2FD", progressColor: "#1268EB", backgroundSelectedColor: "#A6C8FA" },
         } as GanttTask;
       });
   }, [items, onSelect]);
@@ -121,14 +136,15 @@ export default function GanttChart({
 
   return (
     <ErrorBoundary fallback="Couldn't render the timeline.">
-      <div ref={wrapRef} className="card-table max-h-[460px] overflow-auto p-2">
+      <div ref={wrapRef} className="card-table max-h-[360px] overflow-auto p-2 sm:max-h-[460px]">
         <Gantt
-          key={lang}
+          key={`${lang}-${narrow ? "s" : "l"}`}
           tasks={ganttTasks}
           viewMode={viewMode}
           locale={lang === "mn" ? "mn" : "en-US"}
-          listCellWidth="350px"
-          columnWidth={62}
+          /* Narrow the name column on phones so the bars stay visible. */
+          listCellWidth={narrow ? "150px" : "350px"}
+          columnWidth={narrow ? 44 : 62}
           barCornerRadius={4}
           TaskListHeader={makeListHeader(lang)}
           TaskListTable={makeListTable(lang)}

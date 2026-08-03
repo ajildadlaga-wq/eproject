@@ -21,20 +21,20 @@ export default function Modal({
       onClick={onClose}
     >
       <div
-        className="mt-16 w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-pop"
+        className="mt-6 w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-pop sm:mt-16 dark:border-slate-800 dark:bg-slate-900"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
-          <h3 className="text-base font-semibold text-slate-800">{title}</h3>
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 sm:px-5 dark:border-slate-800">
+          <h3 className="min-w-0 truncate text-base font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
           <button
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             aria-label="Close"
           >
             ✕
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-4 sm:p-5">{children}</div>
       </div>
     </div>
   );

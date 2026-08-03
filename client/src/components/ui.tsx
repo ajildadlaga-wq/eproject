@@ -2,7 +2,7 @@
 
 const AVATAR_COLORS = [
   "bg-rose-500", "bg-amber-500", "bg-emerald-500", "bg-sky-500",
-  "bg-indigo-500", "bg-violet-500", "bg-fuchsia-500", "bg-teal-500",
+  "bg-brand-500", "bg-violet-500", "bg-fuchsia-500", "bg-teal-500",
 ];
 
 function hash(s: string): number {
@@ -32,13 +32,16 @@ export function Avatar({ name, size = 28 }: { name: string | null; size?: number
 }
 
 export function ProgressBar({ value, tone = "brand" }: { value: number; tone?: "brand" | "danger" }) {
-  const fill = tone === "danger" ? "bg-rose-500" : "bg-violet-500";
+  const fill = tone === "danger" ? "bg-rose-500" : "bg-brand-500";
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-full min-w-[80px] overflow-hidden rounded-full bg-slate-200">
-        <div className={`h-full rounded-full ${fill}`} style={{ width: `${Math.max(0, Math.min(100, value))}%` }} />
+      <div className="h-1.5 w-full min-w-[80px] overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+        <div
+          className={`h-full rounded-full transition-[width] duration-500 ${fill}`}
+          style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+        />
       </div>
-      <span className="w-9 shrink-0 text-right text-xs font-medium text-slate-500">{value}%</span>
+      <span className="w-9 shrink-0 text-right text-xs font-medium tabular-nums text-slate-500">{value}%</span>
     </div>
   );
 }

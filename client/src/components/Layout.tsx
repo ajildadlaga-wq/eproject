@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth, isAdmin } from "../context/AuthContext";
 import { useT } from "../i18n/LanguageContext";
 import { Avatar } from "./ui";
+import { Logo } from "./Brand";
 
 function useTheme() {
   const [dark, setDark] = useState<boolean>(() => localStorage.getItem("theme") === "dark");
@@ -56,7 +57,7 @@ export default function Layout() {
           <span className="h-0.5 w-5 rounded bg-slate-600 dark:bg-slate-300" />
           <span className="h-0.5 w-5 rounded bg-slate-600 dark:bg-slate-300" />
         </button>
-        <span className="font-bold text-brand">PMS</span>
+        <Logo size={26} />
       </div>
 
       {/* Mobile overlay */}
@@ -65,12 +66,8 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 flex h-screen w-60 shrink-0 flex-col bg-ink px-3 py-4 transition-transform md:sticky md:top-0 md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
         onClick={() => setOpen(false)}>
-        <div className="flex items-center gap-2.5 px-2 pb-5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white">P</span>
-          <div className="flex-1 leading-tight">
-            <div className="text-sm font-semibold text-white">PMS</div>
-            <div className="text-[11px] text-slate-400">{t("nav.workspace")}</div>
-          </div>
+        <div className="flex items-center gap-2 px-2 pb-5">
+          <Logo size={32} tone="dark" subtitle={t("nav.workspace")} className="flex-1 min-w-0" />
           <button onClick={toggleLang} title="Language / Хэл"
             className="flex h-7 items-center justify-center rounded-lg px-1.5 text-[11px] font-bold text-slate-300 hover:bg-white/10 hover:text-white">
             {lang === "en" ? "МН" : "EN"}

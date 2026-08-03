@@ -38,7 +38,7 @@ export function RiskStatusBadge({ value }: { value: RiskStatus }) {
 
 const TASK_STATUS_STYLES: Record<TaskStatus, string> = {
   NOT_STARTED: "bg-slate-100 text-slate-600",
-  IN_PROGRESS: "bg-indigo-100 text-indigo-700",
+  IN_PROGRESS: "bg-brand-100 text-brand-700",
   BLOCKED: "bg-rose-100 text-rose-700",
   DONE: "bg-emerald-100 text-emerald-700",
 };

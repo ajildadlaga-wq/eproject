@@ -47,13 +47,13 @@ export default function Projects() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("proj.title")}</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("proj.subtitle")}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="page-title">{t("proj.title")}</h1>
+          <p className="page-sub">{t("proj.subtitle")}</p>
         </div>
         {canManageProjects(role) && (
-          <button className="btn-primary" onClick={() => setShowForm((s) => !s)}>
+          <button className="btn-primary shrink-0" onClick={() => setShowForm((s) => !s)}>
             {showForm ? t("c.cancel") : t("proj.new")}
           </button>
         )}
@@ -89,7 +89,7 @@ export default function Projects() {
       {isLoading ? (
         <p className="text-slate-500 dark:text-slate-400">{t("c.loading")}</p>
       ) : projects && projects.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {projects.map((p) => (
             <Link
               key={p.id}
@@ -97,7 +97,7 @@ export default function Projects() {
               className="card group transition hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-pop"
             >
               <div className="flex items-start justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-base font-bold text-brand dark:bg-indigo-950/40">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-base font-bold text-brand dark:bg-brand-900/40">
                   {p.name.slice(0, 1).toUpperCase()}
                 </span>
                 <span className="badge bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">

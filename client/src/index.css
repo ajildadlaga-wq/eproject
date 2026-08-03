@@ -49,6 +49,31 @@
   .sheet tbody tr:hover {
     @apply bg-slate-50/70 dark:bg-slate-800/40;
   }
+
+  /* --- Responsive helpers -------------------------------------------------
+     Data tables never squash: below their natural width they scroll sideways
+     inside the card instead of wrapping every cell onto three lines. */
+  .sheet-scroll {
+    @apply -mx-px overflow-x-auto;
+  }
+  .sheet-scroll > table {
+    @apply min-w-[680px];
+  }
+  /* Horizontal strip for tab bars / chip rows on narrow screens. */
+  .scroll-x {
+    @apply flex gap-1 overflow-x-auto whitespace-nowrap;
+    scrollbar-width: none;
+  }
+  .scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+  /* Page heading — shrinks a step on phones. */
+  .page-title {
+    @apply text-xl font-bold text-slate-900 sm:text-2xl dark:text-white;
+  }
+  .page-sub {
+    @apply text-sm text-slate-500 dark:text-slate-400;
+  }
 }
 
 /* Slim scrollbars to match the SaaS look */

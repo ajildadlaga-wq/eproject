@@ -73,7 +73,7 @@ export default function TeamTab({ projectId, canManage }: { projectId: string; c
                 </td>
                 <td className="text-slate-500">{m.profile?.role ? t("role." + m.profile.role) : "—"}</td>
                 <td>
-                  <span className={`badge ${m.member_role === "EDITOR" ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-600"}`}>
+                  <span className={`badge ${m.member_role === "EDITOR" ? "bg-brand-100 text-brand-700" : "bg-slate-100 text-slate-600"}`}>
                     {m.member_role}
                   </span>
                 </td>

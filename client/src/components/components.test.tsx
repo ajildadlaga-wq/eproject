@@ -58,7 +58,7 @@ describe("ProgressBar", () => {
   it("renders the percentage and clamps the fill width", () => {
     const { container } = withLang(<ProgressBar value={150} />, "en");
     expect(screen.getByText("150%")).toBeTruthy(); // label shows raw value
-    const fill = container.querySelector(".bg-violet-500") as HTMLElement;
+    const fill = container.querySelector(".bg-brand-500") as HTMLElement;
     expect(fill.style.width).toBe("100%"); // fill is clamped
   });
 });

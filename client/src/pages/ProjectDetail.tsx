@@ -39,8 +39,8 @@ export default function ProjectDetail() {
         <Link to="/projects" className="text-sm font-medium text-slate-400 hover:text-brand">
           {t("nav.projects")} <span className="mx-1">/</span> <span className="text-slate-600 dark:text-slate-300">{project.name}</span>
         </Link>
-        <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{project.name}</h1>
-        {project.description && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{project.description}</p>}
+        <h1 className="page-title mt-2 break-words">{project.name}</h1>
+        {project.description && <p className="page-sub mt-1">{project.description}</p>}
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="badge bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             {t("sdlc.label")}: {t("phase." + project.sdlc_phase)}
@@ -50,12 +50,13 @@ export default function ProjectDetail() {
 
       <SdlcStepper projectId={project.id} current={project.sdlc_phase} canManage={canManageThis} />
 
-      <div className="inline-flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-card dark:border-slate-800 dark:bg-slate-900">
+      {/* Scrolls sideways on phones instead of wrapping to three rows. */}
+      <div className="scroll-x rounded-xl border border-slate-200 bg-white p-1 shadow-card sm:inline-flex sm:flex-wrap dark:border-slate-800 dark:bg-slate-900">
         {TABS.map((tb) => (
           <button
             key={tb}
             onClick={() => setTab(tb)}
-            className={`rounded-lg px-4 py-1.5 text-sm font-semibold capitalize transition ${
+            className={`shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-semibold capitalize transition sm:px-4 ${
               tab === tb ? "bg-brand text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >

@@ -1,0 +1,14 @@
+# Normalise line endings so a Windows checkout doesn't rewrite every file.
+# Text files are stored as LF in the repository; Git converts on checkout.
+* text=auto eol=lf
+
+# Binary assets — never touch.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.pptx binary

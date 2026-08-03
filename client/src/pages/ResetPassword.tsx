@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useT } from "../i18n/LanguageContext";
 import { useToast } from "../components/Toast";
 import { supabase } from "../lib/supabase";
+import { Logo } from "../components/Brand";
 
 /**
  * Landing page for the password-recovery email link. The link contains a
@@ -44,8 +45,8 @@ export default function ResetPassword() {
               {lang === "en" ? "МН" : "EN"}
             </button>
           </div>
-          <h1 className="text-2xl font-bold text-brand">PMS</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("auth.resetTitle")}</p>
+          <Logo size={38} />
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("auth.resetTitle")}</p>
         </div>
 
         {loading ? (

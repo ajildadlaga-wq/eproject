@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useT } from "../i18n/LanguageContext";
 import { useToast } from "../components/Toast";
 import { supabase } from "../lib/supabase";
+import { Logo } from "../components/Brand";
 
 /**
  * Self-signup. The handle_new_user trigger creates the profile with the
@@ -57,8 +58,8 @@ export default function Signup() {
               {lang === "en" ? "МН" : "EN"}
             </button>
           </div>
-          <h1 className="text-2xl font-bold text-brand">PMS</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("auth.signupTitle")}</p>
+          <Logo size={38} />
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("auth.signupTitle")}</p>
         </div>
         <form onSubmit={onSubmit} className="card space-y-4">
           {error && <div className="rounded bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950/40">{error}</div>}

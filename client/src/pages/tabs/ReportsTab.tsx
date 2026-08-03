@@ -42,7 +42,7 @@ export default function ReportsTab({ projectId }: { projectId: string }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="badge bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
+                  <span className="badge bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
                     {taskName(u.task_id)}
                   </span>
                   <span className="badge bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">

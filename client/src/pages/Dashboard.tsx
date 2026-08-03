@@ -11,16 +11,18 @@ import { useT } from "../i18n/LanguageContext";
 
 const TONE: Record<string, string> = {
   slate: "text-slate-800 dark:text-slate-100",
-  blue: "text-indigo-600",
+  blue: "text-brand-600",
   red: "text-rose-600",
   orange: "text-amber-600",
 };
 
 function Kpi({ label, value, tone = "slate" }: { label: string; value: string | number; tone?: string }) {
   return (
-    <div className="card">
-      <div className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</div>
-      <div className={`mt-2 text-3xl font-bold ${TONE[tone] ?? TONE.slate}`}>{value}</div>
+    <div className="card p-4 sm:p-5">
+      <div className="text-xs font-medium leading-snug text-slate-500 dark:text-slate-400">{label}</div>
+      <div className={`mt-1.5 text-2xl font-bold tabular-nums sm:mt-2 sm:text-3xl ${TONE[tone] ?? TONE.slate}`}>
+        {value}
+      </div>
     </div>
   );
 }
@@ -75,11 +77,11 @@ export default function Dashboard() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("dash.title")}</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("dash.subtitle")}</p>
+        <h1 className="page-title">{t("dash.title")}</h1>
+        <p className="page-sub">{t("dash.subtitle")}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label={t("dash.kpiProjects")} value={projects?.length ?? 0} />
         <Kpi label={t("dash.kpiWeighted")} value={`${weightedProgress(allTasks ?? [])}%`} tone="blue" />
         <Kpi label={t("dash.kpiOverdue")} value={totalOverdue} tone="red" />
@@ -96,8 +98,9 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="card-table overflow-x-auto">
+      <div className="card-table">
         <div className="px-4 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300">{t("dash.projects")}</div>
+        <div className="sheet-scroll">
         <table className="sheet">
           <thead>
             <tr>
@@ -128,6 +131,7 @@ export default function Dashboard() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

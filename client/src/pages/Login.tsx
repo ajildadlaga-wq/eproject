@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useT } from "../i18n/LanguageContext";
 import { useToast } from "../components/Toast";
 import { supabase } from "../lib/supabase";
+import { Logo, LogoMark } from "../components/Brand";
 
 const DEMO: [string, string][] = [
   ["admin@pms.local", "SUPER_ADMIN"],
@@ -49,17 +50,52 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 dark:bg-slate-950">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 flex flex-col items-center">
-          <div className="mb-3 self-end">
-            <button onClick={toggle} className="btn-ghost px-2.5 py-1 text-xs">
+    <div className="flex min-h-screen bg-white dark:bg-slate-950">
+      {/* Brand panel — hidden on small screens */}
+      <aside className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-ink p-12 lg:flex">
+        {/* Decorative Gantt-bar motif */}
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-24 top-1/2 h-[520px] w-[520px] -translate-y-1/2 text-white/[0.04]"
+          viewBox="0 0 300 300"
+          fill="currentColor"
+        >
+          <rect x="18" y="18" width="264" height="264" rx="58" />
+        </svg>
+        <div className="relative">
+          <LogoMark size={52} className="text-brand-400" />
+          <h1 className="mt-7 text-3xl font-bold leading-tight text-white">E-Project</h1>
+          <p className="mt-1 text-sm font-medium text-brand-300">{t("login.tagline")}</p>
+        </div>
+        <ul className="relative space-y-4">
+          {["login.point1", "login.point2", "login.point3"].map((k) => (
+            <li key={k} className="flex items-start gap-3 text-sm text-slate-300">
+              <svg viewBox="0 0 24 24" className="mt-0.5 h-4 w-4 shrink-0 text-accent" fill="none"
+                stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12.5l5 5L20 6.5" />
+              </svg>
+              {t(k)}
+            </li>
+          ))}
+        </ul>
+        <p className="relative text-xs text-slate-500">{t("login.footer")}</p>
+      </aside>
+
+      {/* Form panel */}
+      <div className="flex w-full flex-col items-center justify-center px-4 py-10 lg:w-1/2">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 flex items-start justify-between">
+            <div className="lg:hidden">
+              <Logo size={34} subtitle={t("login.subtitle")} />
+            </div>
+            <div className="hidden lg:block">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t("login.welcome")}</h2>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("login.subtitle")}</p>
+            </div>
+            <button onClick={toggle} className="btn-ghost shrink-0 px-2.5 py-1 text-xs">
               {lang === "en" ? "МН" : "EN"}
             </button>
           </div>
-          <h1 className="text-2xl font-bold text-brand">PMS</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("login.subtitle")}</p>
-        </div>
         <form onSubmit={onSubmit} className="card space-y-4">
           {error && <div className="rounded bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950/40">{error}</div>}
           <div>
@@ -97,6 +133,7 @@ export default function Login() {
             </ul>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
