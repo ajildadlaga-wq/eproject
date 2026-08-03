@@ -28,7 +28,7 @@ export default {
         },
         // E-Mongolia logo red — reserved for rejected / overdue emphasis.
         flag: "#EE3124",
-        ink: "#0A2148", // sidebar
+        ink: "#0A2148", // deep navy — the login brand panel
       },
       boxShadow: {
         card: "0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06)",
