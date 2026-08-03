@@ -76,10 +76,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="page-title">{t("dash.title")}</h1>
-        <p className="page-sub">{t("dash.subtitle")}</p>
-      </div>
+      <p className="page-sub">{t("dash.subtitle")}</p>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label={t("dash.kpiProjects")} value={projects?.length ?? 0} />

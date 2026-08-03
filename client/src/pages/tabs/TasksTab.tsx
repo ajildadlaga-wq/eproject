@@ -335,7 +335,7 @@ function Row({ t, projectId, canEdit, canDelete, canReview, userId, onEdit, onPr
       <td className="whitespace-nowrap text-right">
         {canReview && inReview && (
           <button className="btn mr-1 bg-accent px-2.5 py-1 text-xs text-white hover:bg-accent-dark"
-            onClick={() => onReview(t)}>{tr("review.pending")}</button>
+            onClick={() => onReview(t)}>{tr("review.reviewBtn")}</button>
         )}
         {canSubmit && (
           <button className="btn mr-1 border border-accent/40 bg-accent-light px-2.5 py-1 text-xs font-semibold text-accent-dark hover:bg-accent/20 disabled:opacity-50"

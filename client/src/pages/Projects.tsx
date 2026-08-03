@@ -48,10 +48,7 @@ export default function Projects() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="page-title">{t("proj.title")}</h1>
-          <p className="page-sub">{t("proj.subtitle")}</p>
-        </div>
+        <p className="page-sub min-w-0">{t("proj.subtitle")}</p>
         {canManageProjects(role) && (
           <button className="btn-primary shrink-0" onClick={() => setShowForm((s) => !s)}>
             {showForm ? t("c.cancel") : t("proj.new")}
