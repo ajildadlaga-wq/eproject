@@ -99,7 +99,7 @@ export const en: Dict = {
 
   // overview
   "dash.title": "Overview",
-  "dash.subtitle": "Every project under way. Open one to see its tasks.",
+  "dash.search": "Find a project by name…",
   "dash.kpiProjects": "Projects",
   "dash.kpiWeighted": "Overall progress",
   "dash.kpiOverdue": "Overdue tasks",
@@ -335,7 +335,7 @@ export const mn: Dict = {
   "role.VIEWER": "Ажиглагч",
 
   "dash.title": "Ерөнхий байдал",
-  "dash.subtitle": "Хэрэгжиж буй бүх төсөл. Төсөл дээр дарж ажлуудыг нь харна уу.",
+  "dash.search": "Төслийг нэрээр нь хайх…",
   "dash.kpiProjects": "Төсөл",
   "dash.kpiWeighted": "Нийт явц",
   "dash.kpiOverdue": "Хугацаа хэтэрсэн",

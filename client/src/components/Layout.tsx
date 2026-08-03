@@ -62,9 +62,9 @@ export default function Layout() {
   const iconBtn =
     "flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200";
 
+  // The logo already goes home, so the overview needs no link of its own.
   const nav = (cls: typeof link) => (
     <>
-      <NavLink to="/" end className={cls}><Icon d={ICONS.dashboard} /> {t("nav.dashboard")}</NavLink>
       <NavLink to="/projects" className={cls}><Icon d={ICONS.projects} /> {t("nav.projects")}</NavLink>
       {isAdmin(role) && (
         <NavLink to="/admin" className={cls}><Icon d={ICONS.admin} /> {t("nav.admin")}</NavLink>

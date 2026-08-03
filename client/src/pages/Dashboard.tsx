@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ViewMode } from "gantt-task-react";
@@ -32,6 +32,7 @@ const today = new Date().toISOString().slice(0, 10);
 export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useT();
+  const [q, setQ] = useState("");
   const { data: projects } = useQuery({ queryKey: ["projects"], queryFn: api.listProjects });
   const { data: allTasks } = useQuery({ queryKey: ["all_tasks"], queryFn: api.listAllTasks });
   const { data: allRisks } = useQuery({ queryKey: ["all_risks"], queryFn: api.listAllRisks });
@@ -48,7 +49,11 @@ export default function Dashboard() {
 
   const overdue = (t: Task) => isOpen(t) && !!t.planned_end && t.planned_end < today;
 
-  const rows = (projects ?? []).map((p) => {
+  const matches = (projects ?? []).filter((p) =>
+    p.name.toLowerCase().includes(q.trim().toLowerCase()),
+  );
+
+  const rows = matches.map((p) => {
     const tasks = byProject.get(p.id) ?? [];
     return {
       project: p,
@@ -76,7 +81,28 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <p className="page-sub">{t("dash.subtitle")}</p>
+      {/* Finding one project among many is the first thing you come here to
+          do, so it gets the top of the page rather than a sentence of prose. */}
+      <div className="relative">
+        <svg viewBox="0 0 24 24" aria-hidden="true"
+          className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+          fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+        </svg>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={t("dash.search")}
+          aria-label={t("dash.search")}
+          className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-12 pr-11 text-[15px] text-slate-700 shadow-card outline-none transition placeholder:text-slate-400 focus:border-brand focus:ring-4 focus:ring-brand/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+        />
+        {q && (
+          <button onClick={() => setQ("")} aria-label={t("c.cancel")}
+            className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800">
+            ✕
+          </button>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label={t("dash.kpiProjects")} value={projects?.length ?? 0} />
@@ -124,7 +150,9 @@ export default function Dashboard() {
               </tr>
             ))}
             {rows.length === 0 && (
-              <tr><td colSpan={5} className="py-6 text-center text-slate-400">{t("dash.noProjects")}</td></tr>
+              <tr><td colSpan={5} className="py-6 text-center text-slate-400">
+                {q ? t("proj.noMatch") : t("dash.noProjects")}
+              </td></tr>
             )}
           </tbody>
         </table>
