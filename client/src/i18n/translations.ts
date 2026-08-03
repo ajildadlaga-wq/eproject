@@ -116,7 +116,6 @@ export const en: Dict = {
 
   // projects
   "proj.title": "Projects",
-  "proj.subtitle": "Follow delivery through each phase.",
   "proj.new": "+ New project",
   "proj.name": "Project name",
   "proj.createBtn": "Create project",
@@ -351,7 +350,6 @@ export const mn: Dict = {
   "dash.noProjects": "Төсөл алга.",
 
   "proj.title": "Төслүүд",
-  "proj.subtitle": "Үе шат бүрээр төслийн явцыг хянана.",
   "proj.new": "+ Шинэ төсөл",
   "proj.name": "Төслийн нэр",
   "proj.createBtn": "Үүсгэх",

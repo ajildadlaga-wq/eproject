@@ -7,6 +7,7 @@ import { isOpen, weightedProgress } from "../lib/types";
 import type { Task } from "../lib/types";
 import GanttChart, { GanttItem } from "../components/GanttChart";
 import { ProgressBar } from "../components/ui";
+import SearchBox from "../components/SearchBox";
 import { useT } from "../i18n/LanguageContext";
 
 const TONE: Record<string, string> = {
@@ -83,26 +84,7 @@ export default function Dashboard() {
     <div className="space-y-5">
       {/* Finding one project among many is the first thing you come here to
           do, so it gets the top of the page rather than a sentence of prose. */}
-      <div className="relative">
-        <svg viewBox="0 0 24 24" aria-hidden="true"
-          className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
-          fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-          <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-        </svg>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={t("dash.search")}
-          aria-label={t("dash.search")}
-          className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-12 pr-11 text-[15px] text-slate-700 shadow-card outline-none transition placeholder:text-slate-400 focus:border-brand focus:ring-4 focus:ring-brand/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-        />
-        {q && (
-          <button onClick={() => setQ("")} aria-label={t("c.cancel")}
-            className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800">
-            ✕
-          </button>
-        )}
-      </div>
+      <SearchBox value={q} onChange={setQ} placeholder={t("dash.search")} clearLabel={t("c.cancel")} />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label={t("dash.kpiProjects")} value={projects?.length ?? 0} />

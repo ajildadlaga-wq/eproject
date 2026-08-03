@@ -7,6 +7,7 @@ import type { Project, Task } from "../lib/types";
 import { useAuth, canManageProjects } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import { Avatar, ProgressBar } from "../components/ui";
+import SearchBox from "../components/SearchBox";
 import { useT } from "../i18n/LanguageContext";
 import { formatDate } from "../i18n/date";
 
@@ -162,19 +163,15 @@ export default function Projects() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="page-sub min-w-0">{t("proj.subtitle")}</p>
-        <div className="flex items-center gap-2">
-          {(projects?.length ?? 0) > 4 && (
-            <input className="input max-w-[190px]" value={q} onChange={(e) => setQ(e.target.value)}
-              placeholder={t("proj.search")} />
-          )}
-          {canManageProjects(role) && (
-            <button className="btn-primary shrink-0" onClick={() => setShowForm((s) => !s)}>
-              {showForm ? t("c.cancel") : t("proj.new")}
-            </button>
-          )}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="min-w-[240px] flex-1">
+          <SearchBox value={q} onChange={setQ} placeholder={t("proj.search")} clearLabel={t("c.cancel")} />
         </div>
+        {canManageProjects(role) && (
+          <button className="btn-primary shrink-0" onClick={() => setShowForm((s) => !s)}>
+            {showForm ? t("c.cancel") : t("proj.new")}
+          </button>
+        )}
       </div>
 
       {showForm && (
