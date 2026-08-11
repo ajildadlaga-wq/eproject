@@ -1,5 +1,5 @@
-import { FormEvent, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { FormEvent, useEffect, useState } from "react";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useT } from "../i18n/LanguageContext";
 import { useToast } from "../components/Toast";
@@ -23,8 +23,17 @@ export default function Login() {
   const [password, setPassword] = useState(import.meta.env.DEV ? "Password123!" : "");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [params] = useSearchParams();
+  const justConfirmed = params.get("confirmed") === "1";
 
-  if (session) return <Navigate to="/" replace />;
+  // Following the confirmation link signs the account in. Confirming an
+  // address and signing in are two different acts, so end that session and
+  // let the person type their password.
+  useEffect(() => {
+    if (justConfirmed && session) void supabase.auth.signOut();
+  }, [justConfirmed, session]);
+
+  if (session && !justConfirmed) return <Navigate to="/" replace />;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -97,6 +106,15 @@ export default function Login() {
             </button>
           </div>
         <form onSubmit={onSubmit} className="card space-y-4">
+          {justConfirmed && (
+            <div className="flex items-start gap-2 rounded-lg border border-accent/30 bg-accent-light p-2.5 text-sm text-accent-dark">
+              <svg viewBox="0 0 24 24" className="mt-0.5 h-4 w-4 shrink-0" fill="none" stroke="currentColor"
+                strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12.5l5 5L20 6.5" />
+              </svg>
+              {t("auth.confirmed")}
+            </div>
+          )}
           {error && <div className="rounded bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950/40">{error}</div>}
           <div>
             <label className="label">{t("c.email")}</label>

@@ -21,6 +21,9 @@ export default function Signup() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Set once the account exists and the confirmation mail is on its way.
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [resent, setResent] = useState(false);
 
   if (session) return <Navigate to="/" replace />;
 
@@ -34,7 +37,13 @@ export default function Signup() {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { full_name: fullName.trim() } }, // role defaults to VIEWER via trigger
+      options: {
+        data: { full_name: fullName.trim() },   // role defaults to VIEWER via trigger
+        // Send the link back to this site's sign-in page. Without this the
+        // link follows the project's Site URL, which is easy to leave pointing
+        // at a developer's laptop.
+        emailRedirectTo: `${window.location.origin}/login?confirmed=1`,
+      },
     });
     setBusy(false);
     if (error) return setError(error.message);
@@ -43,10 +52,24 @@ export default function Signup() {
       // Email confirmation disabled -> signed in immediately.
       navigate("/");
     } else {
-      // Email confirmation required first.
-      toast.success(t("auth.checkEmail"));
-      navigate("/login");
+      // The account is not usable until the address is proven. Staying on this
+      // page and saying so beats dropping the person on a sign-in form that
+      // will refuse them.
+      setSentTo(email.trim());
     }
+  }
+
+  async function onResend() {
+    if (!sentTo) return;
+    setBusy(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: sentTo,
+      options: { emailRedirectTo: `${window.location.origin}/login?confirmed=1` },
+    });
+    setBusy(false);
+    if (error) toast.error(error.message);
+    else setResent(true);
   }
 
   return (
@@ -61,6 +84,36 @@ export default function Signup() {
           <Logo size={38} />
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("auth.signupTitle")}</p>
         </div>
+        {sentTo ? (
+          <div className="card space-y-4 text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-light">
+              <svg viewBox="0 0 24 24" className="h-7 w-7 text-accent-dark" fill="none" stroke="currentColor"
+                strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 6h16v12H4z" /><path d="m4 7 8 6 8-6" />
+              </svg>
+            </span>
+            <div>
+              <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">
+                {t("auth.confirmSentTitle")}
+              </h2>
+              <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{t("auth.confirmSentBody")}</p>
+              <p className="mt-2 break-all text-sm font-semibold text-brand">{sentTo}</p>
+            </div>
+            <p className="text-xs text-slate-400">{t("auth.confirmSentHint")}</p>
+            <div className="space-y-2">
+              {resent ? (
+                <p className="text-xs font-medium text-accent-dark">{t("auth.confirmResent")}</p>
+              ) : (
+                <button className="btn-ghost w-full justify-center" disabled={busy} onClick={onResend}>
+                  {busy ? t("c.loading") : t("auth.confirmResend")}
+                </button>
+              )}
+              <Link to="/login" className="block text-xs text-slate-400 hover:text-brand">
+                {t("auth.backToLogin")}
+              </Link>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={onSubmit} className="card space-y-4">
           {error && <div className="rounded bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950/40">{error}</div>}
           <div>
@@ -88,6 +141,7 @@ export default function Signup() {
             <Link to="/login" className="text-brand hover:underline">{t("nav.signIn")}</Link>
           </p>
         </form>
+        )}
       </div>
     </div>
   );
