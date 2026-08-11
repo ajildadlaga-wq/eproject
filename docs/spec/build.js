@@ -3,7 +3,7 @@ const fs = require('fs');
 const D = require('docx');
 const {
   Document, Packer, Paragraph, TextRun, AlignmentType, Header, Footer,
-  PageNumber, LevelFormat, BorderStyle, convertInchesToTwip,
+  PageNumber, LevelFormat, BorderStyle,
 } = D;
 const { FONT, NAVY, BLUE, GREY } = require('./lib/doc');
 const { META, cover, revisionHistory, toc, abbreviations } = require('./lib/front');
@@ -12,9 +12,14 @@ const chapters = [
   require('./ch/ch01_charter'),
   require('./ch/ch02_vision'),
   require('./ch/ch03_stakeholder'),
+  require('./ch/ch04_srs'),
+  require('./ch/ch05_usecase'),
+  require('./ch/ch06_static'),
+  require('./ch/ch07_dynamic'),
+  require('./ch/ch08_database'),
+  require('./ch/ch09_conclusion'),
 ];
 
-// ------------------------------------------------------------------ header/footer
 const header = new Header({
   children: [new Paragraph({
     alignment: AlignmentType.RIGHT,
@@ -39,8 +44,11 @@ const footer = new Footer({
 });
 
 const blankFooter = new Footer({ children: [new Paragraph('')] });
+const page = {
+  size: { width: 11906, height: 16838 },
+  margin: { top: 1134, right: 1134, bottom: 1134, left: 1418 },
+};
 
-// ------------------------------------------------------------------ document
 const doc = new Document({
   creator: META.author,
   title: 'E-Project — Software Project Documentation',
@@ -54,9 +62,7 @@ const doc = new Document({
       heading2: { run: { font: FONT, size: 27, bold: true, color: BLUE } },
       heading3: { run: { font: FONT, size: 23, bold: true, color: '000000' } },
     },
-    paragraphStyles: [
-      { id: 'Normal', name: 'Normal', run: { font: FONT, size: 22 } },
-    ],
+    paragraphStyles: [{ id: 'Normal', name: 'Normal', run: { font: FONT, size: 22 } }],
   },
   numbering: {
     config: [
@@ -73,30 +79,15 @@ const doc = new Document({
     ],
   },
   sections: [
-    // --- front matter (no header, roman-ish plain) ---
-    {
-      properties: {
-        page: { size: { width: 11906, height: 16838 },
-                margin: { top: 1134, right: 1134, bottom: 1134, left: 1418 } },
-      },
-      footers: { default: blankFooter },
-      children: [...cover(), ...revisionHistory(), ...toc(), ...abbreviations()],
-    },
-    // --- body ---
-    {
-      properties: {
-        page: { size: { width: 11906, height: 16838 },
-                margin: { top: 1134, right: 1134, bottom: 1134, left: 1418 } },
-      },
-      headers: { default: header },
-      footers: { default: footer },
-      children: chapters.flatMap(fn => fn()),
-    },
+    { properties: { page }, footers: { default: blankFooter },
+      children: [...cover(), ...revisionHistory(), ...toc(), ...abbreviations()] },
+    { properties: { page }, headers: { default: header }, footers: { default: footer },
+      children: chapters.flatMap(fn => fn()) },
   ],
 });
 
 Packer.toBuffer(doc).then(buf => {
   const out = process.argv[2] || 'E-Project_Documentation.docx';
   fs.writeFileSync(out, buf);
-  console.log('✓ written:', out, (buf.length / 1024).toFixed(0) + ' KB');
+  console.log('✓', out, (buf.length / 1024).toFixed(0) + ' KB');
 });

@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import type {
-  MemberRole, Profile, Project, ProjectMember, Requirement, Risk, SdlcPhase, Task, TaskStatus, TaskUpdate,
+  AuditEntry, MemberRole, Profile, Project, ProjectMember, Requirement, Risk, SdlcPhase, Task, TaskStatus, TaskUpdate,
 } from "./types";
 
 /** Throw on a Postgrest error, otherwise return the data as T. */
@@ -131,6 +131,14 @@ export const api = {
   },
 
   // ---- audit trail ----
+  // Read-only by design: the table grants no write to authenticated users, so
+  // there is deliberately no createAuditEntry here.
+  async listAuditLog(filter: { action?: string; projectId?: string } = {}): Promise<AuditEntry[]> {
+    let q = supabase.from("audit_log").select("*").order("occurred_at", { ascending: false }).limit(300);
+    if (filter.action) q = q.eq("action", filter.action);
+    if (filter.projectId) q = q.eq("project_id", filter.projectId);
+    return check(await q);
+  },
   async listTaskUpdates(projectId: string): Promise<TaskUpdate[]> {
     return check(await supabase.from("task_updates").select("*").eq("project_id", projectId)
       .order("created_at", { ascending: false }));

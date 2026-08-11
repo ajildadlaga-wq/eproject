@@ -85,6 +85,28 @@ export interface TaskUpdate {
   what_happened: string | null; why_changed: string | null; created_at: string;
 }
 
+/** One line of the append-only audit trail. Written by the database, never
+ *  by the client — the API grants no insert, update or delete on this table. */
+export interface AuditEntry {
+  id: number;
+  occurred_at: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  actor_role: string | null;
+  action: string;          // TASK_APPROVED, ROLE_CHANGED, …
+  entity: string;          // task, project, profile
+  entity_id: string | null;
+  project_id: string | null;
+  summary: string | null;
+  detail: Record<string, unknown> | null;
+}
+
+/** The actions the database records, in the order they matter to a reviewer. */
+export const AUDIT_ACTIONS = [
+  "TASK_SUBMITTED", "TASK_APPROVED", "TASK_REJECTED",
+  "PROJECT_REASSIGNED", "ROLE_CHANGED",
+] as const;
+
 export interface ProjectMember {
   project_id: string; user_id: string; member_role: MemberRole; created_at: string;
   // joined profile (when selected with profiles)

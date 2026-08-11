@@ -8,6 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Admin from "./pages/Admin";
+import AuditLog from "./pages/AuditLog";
 
 export default function App() {
   return (
@@ -30,6 +31,14 @@ export default function App() {
           element={
             <ProtectedRoute roles={["ADMIN"]}>
               <Admin />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="audit"
+          element={
+            <ProtectedRoute roles={["ADMIN"]}>
+              <AuditLog />
             </ProtectedRoute>
           }
         />

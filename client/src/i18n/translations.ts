@@ -21,6 +21,7 @@ export const en: Dict = {
   "nav.signOut": "Sign out",
   "nav.signIn": "Sign in",
   "nav.system": "System",
+  "nav.audit": "Audit trail",
 
   // notifications
   "notif.title": "Notifications",
@@ -30,6 +31,22 @@ export const en: Dict = {
   "notif.rejected": "Sent back to you",
   "notif.overdue": "Past its date",
   "notif.due": "Due soon",
+
+  // audit trail
+  "audit.readOnly": "Written by the database and never editable — not from this page, not through the API.",
+  "audit.none": "Nothing recorded yet.",
+  "audit.allActions": "All actions",
+  "audit.allProjects": "All projects",
+  "audit.clear": "Clear filters",
+  "audit.when": "When",
+  "audit.who": "Who",
+  "audit.what": "Action",
+  "audit.detail": "Detail",
+  "audit.TASK_SUBMITTED": "Sent for review",
+  "audit.TASK_APPROVED": "Approved",
+  "audit.TASK_REJECTED": "Sent back",
+  "audit.ROLE_CHANGED": "Role changed",
+  "audit.PROJECT_REASSIGNED": "Project reassigned",
 
   // footer
   "footer.org": "E-Project · E-Mongolia",
@@ -261,6 +278,7 @@ export const mn: Dict = {
   "nav.signOut": "Гарах",
   "nav.signIn": "Нэвтрэх",
   "nav.system": "Систем",
+  "nav.audit": "Аудитын бүртгэл",
 
   "notif.title": "Мэдэгдэл",
   "notif.none": "Одоогоор шаардлагатай зүйл алга.",
@@ -269,6 +287,21 @@ export const mn: Dict = {
   "notif.rejected": "Танд буцаагдсан",
   "notif.overdue": "Хугацаа хэтэрсэн",
   "notif.due": "Хугацаа дөхөж байна",
+
+  "audit.readOnly": "Өгөгдлийн сан бичдэг, хэн ч засах боломжгүй — энэ хуудаснаас ч, API-аар ч.",
+  "audit.none": "Бүртгэл алга.",
+  "audit.allActions": "Бүх үйлдэл",
+  "audit.allProjects": "Бүх төсөл",
+  "audit.clear": "Шүүлт цэвэрлэх",
+  "audit.when": "Хэзээ",
+  "audit.who": "Хэн",
+  "audit.what": "Үйлдэл",
+  "audit.detail": "Дэлгэрэнгүй",
+  "audit.TASK_SUBMITTED": "Хянуулахаар илгээв",
+  "audit.TASK_APPROVED": "Баталлаа",
+  "audit.TASK_REJECTED": "Буцаалаа",
+  "audit.ROLE_CHANGED": "Эрх өөрчлөв",
+  "audit.PROJECT_REASSIGNED": "Төсөл шилжүүлэв",
 
   "footer.org": "E-Project · E-Mongolia",
   "footer.tagline": "Дотоод төслийн хяналт",

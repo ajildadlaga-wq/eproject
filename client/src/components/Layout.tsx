@@ -29,6 +29,7 @@ const ICONS = {
   dashboard: "M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z",
   projects: "M3 7h18M3 12h18M3 17h18",
   admin: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0",
+  audit: "M9 12h6M9 16h6M9 8h2M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z",
 };
 
 /**
@@ -67,7 +68,10 @@ export default function Layout() {
     <>
       <NavLink to="/projects" className={cls}><Icon d={ICONS.projects} /> {t("nav.projects")}</NavLink>
       {isAdmin(role) && (
-        <NavLink to="/admin" className={cls}><Icon d={ICONS.admin} /> {t("nav.admin")}</NavLink>
+        <>
+          <NavLink to="/admin" className={cls}><Icon d={ICONS.admin} /> {t("nav.admin")}</NavLink>
+          <NavLink to="/audit" className={cls}><Icon d={ICONS.audit} /> {t("nav.audit")}</NavLink>
+        </>
       )}
     </>
   );
