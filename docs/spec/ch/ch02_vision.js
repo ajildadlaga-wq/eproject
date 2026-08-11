@@ -65,7 +65,6 @@ module.exports = function chapter2() {
     'Task-ийн хэрэгжилтийг нэг дор хянах.',
     'Approval Workflow ашиглан ажлын чанарыг баталгаажуулах.',
     'Gantt Chart-аас төслийн явц, хамаарлыг хянах.',
-    'Milestone-ийн биелэлтийг хэмжих.',
   ]));
 
   add(H3('2.4.3 Багийн гишүүний түвшинд'));
@@ -153,7 +152,6 @@ module.exports = function chapter2() {
     '**Project Management** — төсөл үүсгэх, засах, архивлах, гишүүн удирдах.',
     '**Task Management** — task үүсгэх, хуваарилах, явц шинэчлэх, хамаарал тогтоох.',
     '**Gantt Chart View** — хугацаа, хамаарал, хариуцагчийн харагдац.',
-    '**Milestone Tracking** — гол үе шатын биелэлт.',
     '**Approval Workflow** — Completed → Under Review → Approved / Rejected.',
     '**Reports** — долоо хоног, сарын тайлан; PDF / Excel экспорт.',
     '**Notifications** — оноогдох, батлагдах, татгалзах, хугацаа дөхөх мэдэгдэл.',
@@ -181,7 +179,6 @@ module.exports = function chapter2() {
       ['Gantt Chart View', '✔', '', ''],
       ['Project Dashboard', '✔', '', ''],
       ['Activity Log', '✔', '', ''],
-      ['Milestone Tracking', '', '✔', ''],
       ['Notifications (in-app)', '', '✔', ''],
       ['Audit Log', '', '✔', ''],
       ['Requirements Baseline', '', '✔', ''],
