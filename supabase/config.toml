@@ -27,8 +27,10 @@ enable_signup = true
 
 [auth.email]
 enable_signup = true
-# Disable email confirmation locally so seeded/dev users can log in immediately.
-enable_confirmations = false
+# Signing up must not hand out a session. The account waits until the person
+# proves they own the address. Seeded demo users are created through the admin
+# API, which marks them confirmed, so local development is unaffected.
+enable_confirmations = true
 
 [functions.admin-create-user]
 verify_jwt = true
