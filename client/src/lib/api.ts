@@ -31,8 +31,26 @@ export const api = {
   async getProject(id: string): Promise<Project> {
     return check(await supabase.from("projects").select("*").eq("id", id).single());
   },
+  /**
+   * Creation goes through a function, not a plain insert.
+   *
+   * The rule — only a project manager, and only under their own name —
+   * is a business rule, so it is stated once in the database in words.
+   * A refusal then comes back as a sentence worth showing the person who
+   * tried, instead of "new row violates row-level security policy for
+   * table projects", which names the table and nothing else.
+   *
+   * manager_id is not sent: the function reads it from the session.
+   */
   async createProject(p: Partial<Project>): Promise<Project> {
-    return check(await supabase.from("projects").insert(p).select().single());
+    const { data, error } = await supabase.rpc("create_project", {
+      p_name: p.name,
+      p_description: p.description ?? null,
+      p_start_date: p.start_date ?? null,
+      p_end_date: p.end_date ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return data as Project;
   },
   async updateProject(id: string, p: Partial<Project>): Promise<Project> {
     return check(await supabase.from("projects").update(p).eq("id", id).select().single());

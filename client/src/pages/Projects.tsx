@@ -91,7 +91,7 @@ function ProjectCard({ p, s, managerName }: { p: Project; s: Summary; managerNam
 }
 
 export default function Projects() {
-  const { role, session } = useAuth();
+  const { role } = useAuth();
   const qc = useQueryClient();
   const toast = useToast();
   const { t } = useT();
@@ -145,7 +145,8 @@ export default function Projects() {
         description: description || null,
         start_date: start || null,
         end_date: end || null,
-        manager_id: session!.user.id,
+        // manager_id is not sent. The database takes it from the session,
+        // so a project cannot be created in anyone else's name.
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["projects"] });
