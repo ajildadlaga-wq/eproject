@@ -35,10 +35,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, s) => {
       setSession(s);
       if (s) await loadProfile(s.user.id);
       else setProfile(null);
+
+      // A reset link lands on "/" — the one path a static host is certain to
+      // serve — and arrives as this event once the token in the fragment has
+      // been read. Only now do we move to the form, and we move there from
+      // inside the running app, where the route exists.
+      if (event === "PASSWORD_RECOVERY" && window.location.pathname !== "/reset-password") {
+        window.history.replaceState(null, "", "/reset-password");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, []);

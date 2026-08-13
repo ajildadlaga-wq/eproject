@@ -1,14 +1,18 @@
 // admin-create-user — Edge Function
-// Lets a SUPER_ADMIN provision a new user with a role. Uses the service-role
-// key (never exposed to the browser) and authorizes the caller by checking
-// their own profile role first.
+// Lets an ADMIN provision a user with a role. Uses the service-role key
+// (never exposed to the browser) and authorizes the caller by checking their
+// own profile role first.
+//
+// An account made this way is created already confirmed: an administrator
+// handing someone their credentials is the proof of address that the mail
+// would otherwise provide.
 //
 // POST { email, password, full_name, role }  ->  { id }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, json } from "../_shared/cors.ts";
 
-const ROLES = ["SUPER_ADMIN", "PROJECT_MANAGER", "EDITOR", "VIEWER"];
+const ROLES = ["ADMIN", "PROJECT_MANAGER", "TEAM_MEMBER", "VIEWER"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -21,7 +25,7 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // 1) Identify the caller and confirm they are a SUPER_ADMIN.
+    // 1) Identify the caller and confirm they are an ADMIN.
     const caller = createClient(url, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -30,8 +34,8 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await caller
       .from("profiles").select("role").eq("id", userData.user.id).single();
-    if (profile?.role !== "SUPER_ADMIN") {
-      return json({ error: "Forbidden: requires SUPER_ADMIN" }, 403);
+    if (profile?.role !== "ADMIN") {
+      return json({ error: "Forbidden: requires ADMIN" }, 403);
     }
 
     // 2) Create the user with the service role.

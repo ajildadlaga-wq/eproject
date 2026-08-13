@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useT } from "../i18n/LanguageContext";
@@ -7,9 +7,23 @@ import { supabase } from "../lib/supabase";
 import { Logo } from "../components/Brand";
 
 /**
- * Self-signup. The handle_new_user trigger creates the profile with the
- * default VIEWER role — least privilege until an admin grants more.
+ * Self-signup.
+ *
+ * Submitting the form creates an account that cannot yet do anything. The
+ * database only makes someone a user of E-Project once they have opened the
+ * link in their mail, and it makes them a VIEWER — least privilege on
+ * arrival, until an administrator decides otherwise.
+ *
+ * So this page does not send anyone away after the form. It waits. Every few
+ * seconds it quietly tries to sign in; Supabase refuses an unconfirmed
+ * account, which means the first sign-in that succeeds *is* the
+ * confirmation. When it does, the person is already where they wanted to be
+ * and we simply let them through.
  */
+
+/** How often to ask, and how long to keep asking. */
+const POLL_MS = 8_000;
+const GIVE_UP_MS = 15 * 60 * 1_000;
 export default function Signup() {
   const { session } = useAuth();
   const { t, lang, toggle } = useT();
@@ -24,6 +38,24 @@ export default function Signup() {
   // Set once the account exists and the confirmation mail is on its way.
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
+  const [gaveUp, setGaveUp] = useState(false);
+
+  // Wait for the address to be proven, then walk them in.
+  useEffect(() => {
+    if (!sentTo || gaveUp) return;
+    const startedAt = Date.now();
+
+    const tick = async () => {
+      if (Date.now() - startedAt > GIVE_UP_MS) { setGaveUp(true); return; }
+      // A failure here is the expected case — it means "not yet" — so it is
+      // not shown to anyone. Only success is worth reacting to.
+      const { data } = await supabase.auth.signInWithPassword({ email: sentTo, password });
+      if (data.session) navigate("/", { replace: true });
+    };
+
+    const id = setInterval(tick, POLL_MS);
+    return () => clearInterval(id);
+  }, [sentTo, password, gaveUp, navigate]);
 
   if (session) return <Navigate to="/" replace />;
 
@@ -39,10 +71,19 @@ export default function Signup() {
       password,
       options: {
         data: { full_name: fullName.trim() },   // role defaults to VIEWER via trigger
-        // Send the link back to this site's sign-in page. Without this the
-        // link follows the project's Site URL, which is easy to leave pointing
-        // at a developer's laptop.
-        emailRedirectTo: `${window.location.origin}/login?confirmed=1`,
+        // Send the link back to the root of this site, and to nothing deeper.
+        //
+        // Two reasons. Without an explicit value the link follows the
+        // project's Site URL, which is easy to leave pointing at a
+        // developer's laptop. And a deeper path — /login, say — is a route
+        // that exists only inside the running app: a static host asked for it
+        // cold has no such file and answers "Not Found", which is what the
+        // person clicking the link in their mail would see.
+        //
+        // "/" exists everywhere. The app boots, reads the token out of the
+        // fragment, and they are simply in — which is the whole point of
+        // having confirmed.
+        emailRedirectTo: `${window.location.origin}/`,
       },
     });
     setBusy(false);
@@ -65,7 +106,7 @@ export default function Signup() {
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: sentTo,
-      options: { emailRedirectTo: `${window.location.origin}/login?confirmed=1` },
+      options: { emailRedirectTo: `${window.location.origin}/` },
     });
     setBusy(false);
     if (error) toast.error(error.message);
@@ -99,6 +140,19 @@ export default function Signup() {
               <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{t("auth.confirmSentBody")}</p>
               <p className="mt-2 break-all text-sm font-semibold text-brand">{sentTo}</p>
             </div>
+            {/* The page is doing something on their behalf, so it says so. */}
+            <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/60">
+              {gaveUp ? (
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t("auth.waitTimedOut")}</p>
+              ) : (
+                <p className="flex items-center justify-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand" />
+                  {t("auth.waitingConfirm")}
+                </p>
+              )}
+              <p className="mt-2 text-xs text-slate-400">{t("auth.nothingUntilConfirmed")}</p>
+            </div>
+
             <p className="text-xs text-slate-400">{t("auth.confirmSentHint")}</p>
             <div className="space-y-2">
               {resent ? (

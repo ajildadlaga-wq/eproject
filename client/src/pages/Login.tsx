@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useT } from "../i18n/LanguageContext";
@@ -26,14 +26,12 @@ export default function Login() {
   const [params] = useSearchParams();
   const justConfirmed = params.get("confirmed") === "1";
 
-  // Following the confirmation link signs the account in. Confirming an
-  // address and signing in are two different acts, so end that session and
-  // let the person type their password.
-  useEffect(() => {
-    if (justConfirmed && session) void supabase.auth.signOut();
-  }, [justConfirmed, session]);
-
-  if (session && !justConfirmed) return <Navigate to="/" replace />;
+  // Following the confirmation link signs the account in, and that is fine:
+  // proving the address is the last thing we were waiting for. Signing them
+  // out again to make them retype a password they entered a minute ago was
+  // ceremony, and it fought with the signup page, which is also waiting to
+  // let them in.
+  if (session) return <Navigate to="/" replace />;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -51,8 +49,11 @@ export default function Login() {
       return;
     }
     setError(null);
+    // Same reasoning as the confirmation link: point at "/", which every
+    // static host serves, and let the app carry them to the form once the
+    // token has been read. See AuthContext's PASSWORD_RECOVERY handler.
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/`,
     });
     if (error) toast.error(error.message);
     else toast.success(t("auth.resetSent"));
