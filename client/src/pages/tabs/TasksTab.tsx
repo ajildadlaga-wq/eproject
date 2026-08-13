@@ -6,9 +6,9 @@ import { PriorityBadge, TaskStatusBadge } from "../../components/Badges";
 import GanttChart, { GanttItem } from "../../components/GanttChart";
 import Modal from "../../components/Modal";
 import { useToast } from "../../components/Toast";
-import { useAuth, canApprove, canManageProjects } from "../../context/AuthContext";
+import { useAuth, canApprove } from "../../context/AuthContext";
 import { useT } from "../../i18n/LanguageContext";
-import { formatDate } from "../../i18n/date";
+import { formatDate, formatDateTime } from "../../i18n/date";
 import { ASSIGNABLE_STATUSES, isOpen } from "../../lib/types";
 import type { Priority, Task, TaskStatus } from "../../lib/types";
 
@@ -386,6 +386,16 @@ function ReviewDialog({ projectId, task, onClose }: {
           <p className="mt-3 text-xs text-slate-400">{t("review.onlyApprovedCounts")}</p>
         </div>
 
+        {/* Approving is a statement that you inspected the work. What the
+            assignee reported along the way is the nearest thing to evidence
+            this screen can offer, so it is here rather than a tab away. */}
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800">
+          <p className="border-b border-slate-100 px-4 py-2 text-xs font-semibold text-slate-500 dark:border-slate-800">
+            {t("task.history")}
+          </p>
+          <TaskHistory taskId={task.id} />
+        </div>
+
         <div>
           <label className="label">{t("review.note")}</label>
           <textarea
@@ -424,9 +434,62 @@ function ReviewDialog({ projectId, task, onClose }: {
   );
 }
 
+// ---- One task's history ---------------------------------------------------
+/**
+ * Every progress report on a single task, newest first.
+ *
+ * Sized to sit inside a table row rather than take over the screen: this is
+ * something you glance at while deciding whether to approve, not a page you
+ * visit. The project-wide version lives on the History tab.
+ */
+function TaskHistory({ taskId }: { taskId: string }) {
+  const { t, lang } = useT();
+  const { data, isLoading } = useQuery({
+    queryKey: ["task_history", taskId],
+    queryFn: () => api.listTaskHistory(taskId),
+  });
+
+  if (isLoading) return <p className="px-4 py-3 text-xs text-slate-400">{t("c.loading")}</p>;
+  const rows = data ?? [];
+  if (rows.length === 0) return <p className="px-4 py-3 text-xs text-slate-400">{t("task.noHistory")}</p>;
+
+  return (
+    <ol className="max-h-56 space-y-0 overflow-y-auto px-4 py-1">
+      {rows.map((u, i) => (
+        <li key={u.id} className="flex gap-3 py-2">
+          {/* A spine down the left, so the entries read as one sequence. */}
+          <div className="flex flex-col items-center">
+            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand" />
+            {i < rows.length - 1 && <span className="mt-1 w-px flex-1 bg-slate-200 dark:bg-slate-700" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+                {u.user_name ?? t("rep.unknown")}
+              </span>
+              <span className="tabular-nums text-xs font-semibold text-brand">
+                {u.progress_before ?? 0}% → {u.progress_after ?? 0}%
+              </span>
+              <span className="ml-auto whitespace-nowrap text-[11px] text-slate-400">
+                {formatDateTime(u.created_at, lang)}
+              </span>
+            </div>
+            {u.what_happened && (
+              <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">{u.what_happened}</p>
+            )}
+            {u.why_changed && (
+              <p className="mt-0.5 text-xs italic text-slate-400">{u.why_changed}</p>
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 // ---- Row ------------------------------------------------------------------
-function Row({ t, projectId, canEdit, canDelete, canReview, userId, onEdit, onProgress, onReview }: {
-  t: Task; projectId: string; canEdit: boolean; canDelete: boolean; canReview: boolean;
+function Row({ t, projectId, canManage, canReview, userId, onEdit, onProgress, onReview }: {
+  t: Task; projectId: string; canManage: boolean; canReview: boolean;
   userId: string | undefined;
   onEdit: (t: Task) => void; onProgress: (t: Task) => void; onReview: (t: Task) => void;
 }) {
@@ -434,12 +497,16 @@ function Row({ t, projectId, canEdit, canDelete, canReview, userId, onEdit, onPr
   const toast = useToast();
   const { t: tr, lang } = useT();
   const overdue = isOverdue(t);
+  const [showHistory, setShowHistory] = useState(false);
 
   const inReview = t.status === "UNDER_REVIEW";
   const approved = t.status === "APPROVED";
   const locked = inReview || approved;          // nothing to edit once it has left the assignee
-  const mine = !!userId && t.assignee_id === userId;
-  const canSubmit = canEdit && mine && ["IN_PROGRESS", "BLOCKED", "REJECTED"].includes(t.status);
+
+  // Reporting belongs to the person doing the work. The manager keeps it for
+  // work nobody has been given yet — unassigned is still theirs to account for.
+  const mine = !!userId && (t.assignee_id === userId || (t.assignee_id === null && canManage));
+  const canSubmit = mine && ["IN_PROGRESS", "BLOCKED", "REJECTED"].includes(t.status);
 
   const patch = useMutation({
     mutationFn: (p: Partial<Task>) => api.updateTask(t.id, p),
@@ -461,6 +528,7 @@ function Row({ t, projectId, canEdit, canDelete, canReview, userId, onEdit, onPr
   });
 
   return (
+    <>
     <tr>
       <td className="font-medium text-slate-800 dark:text-slate-100">
         {t.name}
@@ -486,7 +554,7 @@ function Row({ t, projectId, canEdit, canDelete, canReview, userId, onEdit, onPr
       <td className="w-[16%]"><ProgressBar value={t.percent_complete} tone={overdue ? "danger" : "brand"} /></td>
       <td>
         {/* Once submitted, the status is the review process's to change. */}
-        {canEdit && !locked ? (
+        {canManage && !locked ? (
           <select className={selectCls} value={t.status} disabled={patch.isPending}
             onChange={(e) => patch.mutate({ status: e.target.value as TaskStatus })}>
             {ASSIGNABLE_STATUSES.map((s) => <option key={s} value={s}>{tr("tstatus." + s)}</option>)}
@@ -504,23 +572,50 @@ function Row({ t, projectId, canEdit, canDelete, canReview, userId, onEdit, onPr
             disabled={submit.isPending}
             onClick={() => submit.mutate()}>{tr("review.submit")}</button>
         )}
-        {canEdit && !locked && <button className="btn-ghost mr-1 px-2 py-1 text-xs" onClick={() => onProgress(t)}>{tr("c.update")}</button>}
-        {canEdit && !approved && <button className="btn-ghost mr-1 px-2 py-1 text-xs" onClick={() => onEdit(t)}>{tr("c.edit")}</button>}
-        {canDelete && (
+        {mine && !locked && <button className="btn-ghost mr-1 px-2 py-1 text-xs" onClick={() => onProgress(t)}>{tr("c.update")}</button>}
+        {canManage && !approved && <button className="btn-ghost mr-1 px-2 py-1 text-xs" onClick={() => onEdit(t)}>{tr("c.edit")}</button>}
+        {canManage && (
           <button className="btn-ghost px-2 py-1 text-xs text-rose-600" disabled={del.isPending}
             onClick={() => { if (confirm(`${tr("task.deleteConfirm")} "${t.name}"?`)) del.mutate(); }}>{tr("c.delete")}</button>
         )}
+
+        {/* The history is one click away and stays out of the way until asked
+            for. A manager about to approve wants it; everyone else is reading
+            a list of tasks. */}
+        <button
+          type="button"
+          aria-expanded={showHistory}
+          title={tr("task.history")}
+          onClick={() => setShowHistory((s) => !s)}
+          className={`btn-ghost ml-1 px-1.5 py-1 ${showHistory ? "text-brand" : "text-slate-400"}`}
+        >
+          <svg viewBox="0 0 24 24" className={`h-4 w-4 transition-transform ${showHistory ? "rotate-180" : ""}`}
+            fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 1.8" />
+          </svg>
+        </button>
       </td>
     </tr>
+
+    {showHistory && (
+      <tr>
+        <td colSpan={7} className="bg-slate-50/70 p-0 dark:bg-slate-900/50">
+          <div className="border-l-2 border-brand/40">
+            <TaskHistory taskId={t.id} />
+          </div>
+        </td>
+      </tr>
+    )}
+    </>
   );
 }
 
 // ---- Tab ------------------------------------------------------------------
-export default function TasksTab({ projectId, canEdit }: { projectId: string; canEdit: boolean }) {
+export default function TasksTab({ projectId, canManage }: { projectId: string; canManage: boolean }) {
   const { role, session } = useAuth();
   const { t } = useT();
-  const canDelete = canManageProjects(role);
-  const canReview = canApprove(role);
+  // Approving is the manager's of *this* project, not of any project.
+  const canReview = canApprove(role) && canManage;
   const requireReport = role === "TEAM_MEMBER";
   const userId = session?.user.id;
   const { data: items } = useQuery({ queryKey: ["tasks", projectId], queryFn: () => api.listTasks(projectId) });
@@ -571,11 +666,18 @@ export default function TasksTab({ projectId, canEdit }: { projectId: string; ca
             ))}
           </div>
         </div>
-        {canEdit && <button className="btn-primary" onClick={() => setDialog("new")}>{t("task.add")}</button>}
+        {canManage && <button className="btn-primary" onClick={() => setDialog("new")}>{t("task.add")}</button>}
       </div>
 
       {view === "gantt" ? (
-        <GanttChart items={ganttItems} onSelect={(id) => { const tk = tasks.find((x) => x.id === id); if (tk) canEdit ? setDialog(tk) : setProgressTask(tk); }}
+        <GanttChart
+          items={ganttItems}
+          onSelect={(id) => {
+            const tk = tasks.find((x) => x.id === id);
+            if (!tk) return;
+            if (canManage) setDialog(tk);
+            else if (tk.assignee_id === userId) setProgressTask(tk);
+          }}
           emptyHint={t("task.emptyGantt")} />
       ) : filtered.length === 0 ? (
         <div className="card text-center text-sm text-slate-400">{t("task.noMatch")}</div>
@@ -599,7 +701,7 @@ export default function TasksTab({ projectId, canEdit }: { projectId: string; ca
                   </thead>
                   <tbody>
                     {rows.map((t) => (
-                      <Row key={t.id} t={t} projectId={projectId} canEdit={canEdit} canDelete={canDelete}
+                      <Row key={t.id} t={t} projectId={projectId} canManage={canManage}
                         canReview={canReview} userId={userId}
                         onEdit={setDialog} onProgress={setProgressTask} onReview={setReviewTask} />
                     ))}

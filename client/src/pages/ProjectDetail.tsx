@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { useAuth, canWrite, isAdmin } from "../context/AuthContext";
+import { useAuth, canWrite } from "../context/AuthContext";
 import { useT } from "../i18n/LanguageContext";
 import SdlcStepper from "../components/SdlcStepper";
 import RequirementsTab from "./tabs/RequirementsTab";
@@ -30,7 +30,10 @@ export default function ProjectDetail() {
   if (!project) return <p className="text-slate-500">{t("detail.notFound")}</p>;
 
   // Manager of THIS project (or admin) can manage phase, members, deletes.
-  const canManageThis = isAdmin(role) || project.manager_id === session?.user.id;
+  // Managing this project means being its manager. The administrator sees
+  // every project and runs none of them — a rule the database enforces too,
+  // so leaving them a button here would only produce a refusal.
+  const canManageThis = project.manager_id === session?.user.id;
   const canEditContent = canWrite(role);
 
   return (
@@ -69,7 +72,7 @@ export default function ProjectDetail() {
         <RequirementsTab projectId={project.id} canEdit={canEditContent} canBaseline={canManageThis} />
       )}
       {tab === "risks" && <RisksTab projectId={project.id} canEdit={canEditContent} />}
-      {tab === "tasks" && <TasksTab projectId={project.id} canEdit={canEditContent} />}
+      {tab === "tasks" && <TasksTab projectId={project.id} canManage={canManageThis} />}
       {tab === "reports" && <ReportsTab projectId={project.id} />}
       {tab === "team" && <TeamTab projectId={project.id} canManage={canManageThis} />}
     </div>

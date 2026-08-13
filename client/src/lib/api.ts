@@ -169,6 +169,12 @@ export const api = {
     return check(await supabase.from("task_updates").select("*").eq("project_id", projectId)
       .order("created_at", { ascending: false }));
   },
+  /** One task's history. Read before approving it: the dates and the reasons
+   *  are the only account of how the work actually went. */
+  async listTaskHistory(taskId: string): Promise<TaskUpdate[]> {
+    return check(await supabase.from("task_updates").select("*").eq("task_id", taskId)
+      .order("created_at", { ascending: false }));
+  },
 
   // ---- project members ----
   async listMembers(projectId: string): Promise<ProjectMember[]> {

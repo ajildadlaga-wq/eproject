@@ -205,6 +205,8 @@ export const en: Dict = {
   "task.errBeforeProject": "The project starts on {date}. A task cannot begin before that.",
   "task.errAfterProject": "The project ends on {date}. A task cannot run past that.",
   "task.errBeforeBlocker": "“{name}” has to finish first, so this cannot start before {date}.",
+  "task.history": "Progress history",
+  "task.noHistory": "Nothing reported on this task yet.",
 
   // review / approval
   "review.submit": "Send for review",
@@ -473,6 +475,8 @@ export const mn: Dict = {
   "task.errBeforeProject": "Төсөл {date}-нд эхэлнэ. Ажил түүнээс өмнө эхлэх боломжгүй.",
   "task.errAfterProject": "Төсөл {date}-нд дуусна. Ажил түүнээс хойш үргэлжлэх боломжгүй.",
   "task.errBeforeBlocker": "Эхлээд «{name}» дуусах ёстой тул энэ нь {date}-наас өмнө эхлэхгүй.",
+  "task.history": "Явцын түүх",
+  "task.noHistory": "Энэ ажил дээр одоогоор юу ч тайлагнаагүй байна.",
 
   "review.submit": "Хянуулах",
   "review.approve": "Батлах",
