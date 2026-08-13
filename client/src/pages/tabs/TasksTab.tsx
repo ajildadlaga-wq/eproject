@@ -32,14 +32,46 @@ const selectCls =
 const todayStr = new Date().toISOString().slice(0, 10);
 const isOverdue = (t: Task) => isOpen(t) && !!t.planned_end && t.planned_end < todayStr;
 
+/** The day after a date, as an ISO string. */
+function dayAfter(iso: string): string {
+  const d = new Date(iso + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Which tasks would form a loop if this one waited for them.
+ *
+ * Anything that already waits for `taskId`, at any remove, cannot also be
+ * waited on by it. Offering those as options and refusing them on save would
+ * be a small cruelty, so they are left out of the list.
+ */
+function wouldLoop(taskId: string | undefined, all: Task[]): Set<string> {
+  const out = new Set<string>();
+  if (!taskId) return out;
+  const queue = [taskId];
+  while (queue.length) {
+    const current = queue.shift()!;
+    for (const other of all) {
+      if (out.has(other.id)) continue;
+      if ((other.depends_on ?? []).includes(current)) {
+        out.add(other.id);
+        queue.push(other.id);
+      }
+    }
+  }
+  return out;
+}
+
 // ---- Create / edit dialog -------------------------------------------------
 function TaskDialog({ projectId, task, allTasks, onClose }: {
   projectId: string; task: Task | null; allTasks: Task[]; onClose: () => void;
 }) {
   const qc = useQueryClient();
   const toast = useToast();
-  const { t } = useT();
+  const { t, lang } = useT();
   const { data: members } = useQuery({ queryKey: ["members", projectId], queryFn: () => api.listMembers(projectId) });
+  const { data: project } = useQuery({ queryKey: ["project", projectId], queryFn: () => api.getProject(projectId) });
 
   const [name, setName] = useState(task?.name ?? "");
   const [plannedStart, setPlannedStart] = useState(task?.planned_start ?? "");
@@ -64,9 +96,44 @@ function TaskDialog({ projectId, task, allTasks, onClose }: {
     onError: (e) => toast.error((e as Error).message),
   });
 
-  function submit(e: FormEvent) { e.preventDefault(); if (name.trim()) save.mutate(); }
+  function submit(e: FormEvent) { e.preventDefault(); if (name.trim() && !problem) save.mutate(); }
 
-  const candidateDeps = allTasks.filter((x) => x.id !== task?.id);
+  // A task cannot wait for itself, nor for anything already waiting on it.
+  const looping = useMemo(() => wouldLoop(task?.id, allTasks), [task?.id, allTasks]);
+  const candidateDeps = allTasks.filter((x) => x.id !== task?.id && !looping.has(x.id));
+
+  // The latest thing this task waits for sets the earliest it can begin.
+  const blocker = useMemo(() => {
+    const chosen = allTasks.filter((x) => deps.includes(x.id) && x.planned_end);
+    if (chosen.length === 0) return null;
+    return chosen.reduce((a, b) => (a.planned_end! >= b.planned_end! ? a : b));
+  }, [deps, allTasks]);
+
+  // Every bound the date pickers should respect, in one place. The inputs get
+  // them as min/max, so most mistakes never become possible in the first
+  // place; the database still checks, because a form is only a courtesy.
+  const minStart = [
+    project?.start_date ?? null,
+    blocker?.planned_end ? dayAfter(blocker.planned_end) : null,
+  ].filter(Boolean).sort().pop() ?? undefined;
+
+  const maxDate = project?.end_date ?? undefined;
+  const minEnd = [plannedStart || null, minStart ?? null].filter(Boolean).sort().pop() ?? undefined;
+
+  // What is wrong right now, said as a sentence. Null means nothing is.
+  const problem: string | null = (() => {
+    if (plannedStart && plannedEnd && plannedEnd < plannedStart) return t("task.errEndsFirst");
+    if (project?.start_date && plannedStart && plannedStart < project.start_date)
+      return t("task.errBeforeProject", { date: formatDate(project.start_date, lang) });
+    if (project?.end_date && plannedEnd && plannedEnd > project.end_date)
+      return t("task.errAfterProject", { date: formatDate(project.end_date, lang) });
+    if (blocker?.planned_end && plannedStart && plannedStart <= blocker.planned_end)
+      return t("task.errBeforeBlocker", {
+        name: blocker.name,
+        date: formatDate(dayAfter(blocker.planned_end), lang),
+      });
+    return null;
+  })();
 
   return (
     <Modal title={task ? t("task.edit") : t("task.new")} onClose={onClose}>
@@ -74,9 +141,33 @@ function TaskDialog({ projectId, task, allTasks, onClose }: {
         <div className="md:col-span-6"><label className="label">{t("task.colTask")}</label>
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Core development" autoFocus /></div>
         <div className="md:col-span-3"><label className="label">{t("task.plannedStart")}</label>
-          <input className="input" type="date" value={plannedStart ?? ""} onChange={(e) => setPlannedStart(e.target.value)} /></div>
+          <input className="input" type="date" value={plannedStart ?? ""} min={minStart} max={maxDate}
+            onChange={(e) => setPlannedStart(e.target.value)} /></div>
         <div className="md:col-span-3"><label className="label">{t("task.plannedEnd")}</label>
-          <input className="input" type="date" value={plannedEnd ?? ""} onChange={(e) => setPlannedEnd(e.target.value)} /></div>
+          <input className="input" type="date" value={plannedEnd ?? ""} min={minEnd} max={maxDate}
+            onChange={(e) => setPlannedEnd(e.target.value)} /></div>
+
+        {/* Say what the limits are, rather than leaving greyed-out days to
+            be puzzled over. */}
+        <div className="md:col-span-6 -mt-1 space-y-1">
+          {project?.start_date && project?.end_date && (
+            <p className="text-xs text-slate-400">
+              {t("task.windowHint", {
+                from: formatDate(project.start_date, lang),
+                to: formatDate(project.end_date, lang),
+              })}
+            </p>
+          )}
+          {blocker?.planned_end && (
+            <p className="text-xs text-slate-400">
+              {t("task.blockerHint", {
+                name: blocker.name,
+                date: formatDate(dayAfter(blocker.planned_end), lang),
+              })}
+            </p>
+          )}
+          {problem && <p className="text-xs font-medium text-rose-600">{problem}</p>}
+        </div>
         <div className="md:col-span-2"><label className="label">{t("c.priority")}</label>
           <select className="input" value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
             {PRIORITIES.map((p) => <option key={p} value={p}>{t("prio." + p)}</option>)}
@@ -109,7 +200,9 @@ function TaskDialog({ projectId, task, allTasks, onClose }: {
           </div>
         )}
         <div className="md:col-span-6 mt-1 flex items-center gap-2">
-          <button className="btn-primary" disabled={save.isPending}>{save.isPending ? t("c.saving") : t("task.saveBtn")}</button>
+          <button className="btn-primary" disabled={save.isPending || !!problem}>
+            {save.isPending ? t("c.saving") : t("task.saveBtn")}
+          </button>
           <button type="button" className="btn-ghost" onClick={onClose}>{t("c.cancel")}</button>
         </div>
       </form>

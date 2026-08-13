@@ -199,6 +199,12 @@ export const en: Dict = {
   "task.progressRange": "Progress runs from 0 to 100.",
   "task.hundredSubmits": "At 100% the task goes to your manager for review.",
   "task.sendForReview": "Finish and send for review",
+  "task.windowHint": "The project runs {from} – {to}. A task has to fit inside that.",
+  "task.blockerHint": "Waits for “{name}”, so it can start on {date} at the earliest.",
+  "task.errEndsFirst": "This task would end before it starts.",
+  "task.errBeforeProject": "The project starts on {date}. A task cannot begin before that.",
+  "task.errAfterProject": "The project ends on {date}. A task cannot run past that.",
+  "task.errBeforeBlocker": "“{name}” has to finish first, so this cannot start before {date}.",
 
   // review / approval
   "review.submit": "Send for review",
@@ -461,6 +467,12 @@ export const mn: Dict = {
   "task.progressRange": "Явц 0-оос 100 хооронд байна.",
   "task.hundredSubmits": "100% болгоход ажил менежерт хяналтад очно.",
   "task.sendForReview": "Дуусгаж, хянуулахаар илгээх",
+  "task.windowHint": "Төсөл {from} – {to} хооронд үргэлжилнэ. Ажил энэ хүрээнд багтана.",
+  "task.blockerHint": "«{name}»-г хүлээж байгаа тул хамгийн эрт {date}-нд эхэлнэ.",
+  "task.errEndsFirst": "Энэ ажил эхлэхээсээ өмнө дуусах болж байна.",
+  "task.errBeforeProject": "Төсөл {date}-нд эхэлнэ. Ажил түүнээс өмнө эхлэх боломжгүй.",
+  "task.errAfterProject": "Төсөл {date}-нд дуусна. Ажил түүнээс хойш үргэлжлэх боломжгүй.",
+  "task.errBeforeBlocker": "Эхлээд «{name}» дуусах ёстой тул энэ нь {date}-наас өмнө эхлэхгүй.",
 
   "review.submit": "Хянуулах",
   "review.approve": "Батлах",
