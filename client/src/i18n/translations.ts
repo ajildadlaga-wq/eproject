@@ -191,6 +191,10 @@ export const en: Dict = {
   "task.createdMsg": "Task added",
   "task.deleted": "Task deleted",
   "task.progressUpdated": "Progress saved",
+  "task.progressWhole": "Enter a whole number — no decimals or letters.",
+  "task.progressRange": "Progress runs from 0 to 100.",
+  "task.hundredSubmits": "At 100% the task goes to your manager for review.",
+  "task.sendForReview": "Finish and send for review",
 
   // review / approval
   "review.submit": "Send for review",
@@ -445,6 +449,10 @@ export const mn: Dict = {
   "task.createdMsg": "Ажил нэмэгдлээ",
   "task.deleted": "Устгалаа",
   "task.progressUpdated": "Явц хадгалагдлаа",
+  "task.progressWhole": "Бүхэл тоо оруулна уу — цэг, таслал, үсэг болохгүй.",
+  "task.progressRange": "Явц 0-оос 100 хооронд байна.",
+  "task.hundredSubmits": "100% болгоход ажил менежерт хяналтад очно.",
+  "task.sendForReview": "Дуусгаж, хянуулахаар илгээх",
 
   "review.submit": "Хянуулах",
   "review.approve": "Батлах",

@@ -108,11 +108,18 @@ export const api = {
   async deleteTask(id: string): Promise<void> {
     check(await supabase.from("tasks").delete().eq("id", id));
   },
-  // Atomic progress update that also records an audit-trail entry.
+  /**
+   * Atomic progress update that also records an audit-trail entry.
+   *
+   * Returns the status the task ended up in. Setting progress to 100 is a
+   * statement that the work is finished, so the database moves the task to
+   * UNDER_REVIEW — which is why the caller needs to know: "saved" and
+   * "sent to your manager" deserve different words.
+   */
   async updateTaskProgress(args: {
     taskId: string; progress: number; status?: TaskStatus; what?: string; why?: string;
-  }): Promise<void> {
-    const { error } = await supabase.rpc("update_task_progress", {
+  }): Promise<TaskStatus> {
+    const { data, error } = await supabase.rpc("update_task_progress", {
       p_task_id: args.taskId,
       p_progress: args.progress,
       p_status: args.status ?? null,
@@ -120,6 +127,7 @@ export const api = {
       p_why: args.why ?? null,
     });
     if (error) throw new Error(error.message);
+    return data as TaskStatus;
   },
 
   // ---- approval workflow ----

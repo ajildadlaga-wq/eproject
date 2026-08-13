@@ -125,27 +125,56 @@ function ProgressDialog({ projectId, task, requireReport, onClose }: {
   const toast = useToast();
   const { t } = useT();
   const [progress, setProgress] = useState(task.percent_complete);
+  // What is actually in the number box. Kept apart from `progress` so that a
+  // half-typed or nonsense entry can be shown back to the person with a
+  // reason, instead of being silently rounded into something they did not ask
+  // for.
+  const [typed, setTyped] = useState(String(task.percent_complete));
+  const [numErr, setNumErr] = useState("");
   const [what, setWhat] = useState("");
   const [why, setWhy] = useState("");
   const [err, setErr] = useState("");
 
-  // Progress stops at 99%. Declaring the work finished is a separate act —
-  // "Submit for review" — and only the manager can close it out from there.
+  const done = progress === 100;
+
+  function setBoth(n: number) {
+    setProgress(n);
+    setTyped(String(n));
+    setNumErr("");
+  }
+
+  // Only whole numbers from 0 to 100. Anything else is refused here and
+  // again in the database, which is the copy that matters.
+  function onTyped(v: string) {
+    setTyped(v);
+    if (v.trim() === "") { setNumErr(t("task.progressRange")); return; }
+    if (!/^\d+$/.test(v.trim())) { setNumErr(t("task.progressWhole")); return; }
+    const n = Number(v);
+    if (n < 0 || n > 100) { setNumErr(t("task.progressRange")); return; }
+    setNumErr("");
+    setProgress(n);
+  }
+
+  // Reaching 100 is a claim that the work is finished, so the database sends
+  // the task to the manager. Approval remains the manager's alone.
   const save = useMutation({
     mutationFn: () => {
-      const status: TaskStatus = progress > 0 ? "IN_PROGRESS" : task.status;
+      const status: TaskStatus | undefined = progress > 0 && progress < 100 ? "IN_PROGRESS" : undefined;
       return api.updateTaskProgress({ taskId: task.id, progress, status, what: what || undefined, why: why || undefined });
     },
-    onSuccess: () => {
+    onSuccess: (status) => {
       qc.invalidateQueries({ queryKey: ["tasks", projectId] });
       qc.invalidateQueries({ queryKey: ["task_updates", projectId] });
-      toast.success(t("task.progressUpdated")); onClose();
+      qc.invalidateQueries({ queryKey: ["all_tasks"] });
+      toast.success(status === "UNDER_REVIEW" ? t("review.submitted") : t("task.progressUpdated"));
+      onClose();
     },
     onError: (e) => toast.error((e as Error).message),
   });
 
   function submit(e: FormEvent) {
     e.preventDefault();
+    if (numErr) return;
     if (requireReport && (!what.trim() || !why.trim())) {
       setErr(t("task.auditRequired"));
       return;
@@ -156,13 +185,47 @@ function ProgressDialog({ projectId, task, requireReport, onClose }: {
   return (
     <Modal title={`${t("task.updateTitle")} — ${task.name}`} onClose={onClose}>
       <form onSubmit={submit} className="space-y-4">
-        <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-          <div className="mb-2 flex justify-between text-sm">
-            <span className="text-slate-500">{t("c.progress")}</span><span className="font-bold text-brand">{progress}%</span>
+        <div className={`rounded-xl border p-4 transition-colors ${
+          done ? "border-accent/40 bg-accent-light/50 dark:border-accent/30 dark:bg-accent/5"
+               : "border-slate-200 dark:border-slate-800"}`}>
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <span className="text-sm text-slate-500">{t("c.progress")}</span>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number" inputMode="numeric" min={0} max={100} step={1} value={typed}
+                onChange={(e) => onTyped(e.target.value)}
+                aria-label={t("c.progress")}
+                className={`w-20 rounded-lg border bg-white px-2 py-1 text-right text-lg font-bold tabular-nums outline-none focus:ring-2 dark:bg-slate-900 ${
+                  numErr
+                    ? "border-rose-400 text-rose-600 focus:ring-rose-500/20"
+                    : done
+                      ? "border-accent/50 text-accent-dark focus:ring-accent/20"
+                      : "border-slate-200 text-brand focus:ring-brand/20 dark:border-slate-700"}`}
+              />
+              <span className={`text-lg font-bold ${done ? "text-accent-dark" : "text-brand"}`}>%</span>
+            </div>
           </div>
-          <input type="range" min={0} max={99} step={1} value={progress}
-            onChange={(e) => setProgress(Number(e.target.value))} className="w-full" style={{ accentColor: "#1268EB" }} />
-          <p className="mt-2 text-xs text-slate-400">{t("review.onlyApprovedCounts")}</p>
+
+          <input
+            type="range" min={0} max={100} step={1} value={progress}
+            onChange={(e) => setBoth(Number(e.target.value))}
+            className="w-full"
+            style={{ accentColor: done ? "#22A15C" : "#1268EB" }}
+          />
+
+          {numErr ? (
+            <p className="mt-2 text-xs font-medium text-rose-600">{numErr}</p>
+          ) : done ? (
+            <p className="mt-2 flex items-start gap-1.5 text-xs font-medium text-accent-dark">
+              <svg viewBox="0 0 24 24" className="mt-px h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor"
+                strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12.5l5 5L20 6.5" />
+              </svg>
+              {t("task.hundredSubmits")}
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-slate-400">{t("review.onlyApprovedCounts")}</p>
+          )}
         </div>
         <div><label className="label">{t("task.whatChanged")}{requireReport && " *"}</label>
           <input className="input" value={what} onChange={(e) => setWhat(e.target.value)} /></div>
@@ -170,7 +233,9 @@ function ProgressDialog({ projectId, task, requireReport, onClose }: {
           <input className="input" value={why} onChange={(e) => setWhy(e.target.value)} /></div>
         {err && <p className="text-sm text-rose-600">{err}</p>}
         <div className="flex items-center gap-2">
-          <button className="btn-primary" disabled={save.isPending}>{save.isPending ? t("c.saving") : t("task.submit")}</button>
+          <button className="btn-primary" disabled={save.isPending || !!numErr}>
+            {save.isPending ? t("c.saving") : done ? t("task.sendForReview") : t("task.submit")}
+          </button>
           <button type="button" className="btn-ghost" onClick={onClose}>{t("c.cancel")}</button>
         </div>
       </form>
