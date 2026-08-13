@@ -32,12 +32,14 @@ const selectCls =
 const todayStr = new Date().toISOString().slice(0, 10);
 const isOverdue = (t: Task) => isOpen(t) && !!t.planned_end && t.planned_end < todayStr;
 
-/** The day after a date, as an ISO string. */
-function dayAfter(iso: string): string {
+/** An ISO date shifted by whole days. */
+function addDays(iso: string, days: number): string {
   const d = new Date(iso + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() + 1);
+  d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
+const dayAfter = (iso: string) => addDays(iso, 1);
+
 
 /**
  * Which tasks would form a loop if this one waited for them.
@@ -109,13 +111,14 @@ function TaskDialog({ projectId, task, allTasks, onClose }: {
     return chosen.reduce((a, b) => (a.planned_end! >= b.planned_end! ? a : b));
   }, [deps, allTasks]);
 
+  // The first day this task is free to begin, given what it waits for.
+  const earliest = blocker?.planned_end ? dayAfter(blocker.planned_end) : null;
+
   // Every bound the date pickers should respect, in one place. The inputs get
   // them as min/max, so most mistakes never become possible in the first
   // place; the database still checks, because a form is only a courtesy.
-  const minStart = [
-    project?.start_date ?? null,
-    blocker?.planned_end ? dayAfter(blocker.planned_end) : null,
-  ].filter(Boolean).sort().pop() ?? undefined;
+  const minStart = [project?.start_date ?? null, earliest]
+    .filter(Boolean).sort().pop() ?? undefined;
 
   const maxDate = project?.end_date ?? undefined;
   const minEnd = [plannedStart || null, minStart ?? null].filter(Boolean).sort().pop() ?? undefined;
@@ -158,11 +161,12 @@ function TaskDialog({ projectId, task, allTasks, onClose }: {
               })}
             </p>
           )}
-          {blocker?.planned_end && (
+          {blocker?.planned_end && earliest && (
             <p className="text-xs text-slate-400">
               {t("task.blockerHint", {
                 name: blocker.name,
-                date: formatDate(dayAfter(blocker.planned_end), lang),
+                end: formatDate(blocker.planned_end, lang),
+                date: formatDate(earliest, lang),
               })}
             </p>
           )}

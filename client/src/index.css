@@ -81,6 +81,30 @@
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; border: 2px solid transparent; background-clip: content-box; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; background-clip: content-box; }
 
+/* ---- Dependency arrows -------------------------------------------------
+   The library draws these as a hairline in the same grey as the gridlines,
+   so the one mark on the chart that carries meaning — this work waits for
+   that work — reads as part of the background. Given in the brand blue, at
+   a weight you can follow across a row, with a filled head that says which
+   way the dependency runs. */
+.arrow path {
+  stroke: #1268EB;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+.arrow polygon {
+  fill: #1268EB;
+  stroke: #1268EB;
+  stroke-width: 2.5;        /* fattens the arrowhead; its size is fixed in JS */
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+/* Follow one line at a time: hovering a bar lifts its arrows out. */
+.dark .arrow path { stroke: #6BA5F5; }
+.dark .arrow polygon { fill: #6BA5F5; stroke: #6BA5F5; }
+
 /* ---- Dark theme for gantt-task-react (v0.3.9 hashed classes) ----
    The library ships light-only CSS. Re-color its grid, calendar, task list
    and tooltip when the app is in dark mode. Task bars keep their inline colors. */

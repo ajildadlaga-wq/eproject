@@ -19,6 +19,17 @@ function useIsNarrow(): boolean {
   return narrow;
 }
 
+const DAY_MS = 86_400_000;
+
+/**
+ * The last day the bar covers.
+ *
+ * Bars are stored ending at midnight on the following day so that they meet
+ * their successors exactly (see below). Anything shown to a person has to
+ * undo that, or every date on screen reads a day late.
+ */
+const lastDay = (end: Date) => new Date(end.getTime() - DAY_MS);
+
 export interface GanttItem {
   id: string;
   name: string;
@@ -60,10 +71,36 @@ function makeListTable(lang: Lang) {
             style={{ height: rowHeight, display: "flex", alignItems: "center", cursor: "pointer" }}>
             <div className="truncate px-3 font-medium text-slate-700 dark:text-slate-200" style={{ width: nameW }} title={t.name}>{t.name}</div>
             <div className="px-2 text-slate-500 dark:text-slate-400" style={{ width: 200 }}>
-              {formatDate(t.start, lang, "medium")} → {formatDate(t.end, lang, "medium")}
+              {formatDate(t.start, lang, "medium")} → {formatDate(lastDay(t.end), lang, "medium")}
             </div>
           </div>
         ))}
+      </div>
+    );
+  };
+}
+
+// The library's own tooltip prints the stored end date, which is the day
+// after the work finishes, and formats it through Intl — neither of which
+// says anything useful in Mongolian. So we write it.
+function makeTooltip(lang: Lang) {
+  return function TooltipContent({ task, fontSize, fontFamily }: {
+    task: GanttTask; fontSize: string; fontFamily: string;
+  }) {
+    const finish = lastDay(task.end);
+    const days = Math.max(1, Math.round((task.end.getTime() - task.start.getTime()) / DAY_MS));
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+        style={{ fontSize, fontFamily }}>
+        <p className="font-semibold text-slate-800 dark:text-slate-100">{task.name}</p>
+        <p className="mt-1 text-slate-600 dark:text-slate-300">
+          {formatDate(task.start, lang, "medium")} → {formatDate(finish, lang, "medium")}
+        </p>
+        <p className="mt-0.5 text-slate-500 dark:text-slate-400">
+          {lang === "mn" ? `${days} хоног` : `${days} day${days === 1 ? "" : "s"}`}
+          {" · "}
+          {lang === "mn" ? `явц ${task.progress}%` : `${task.progress}% done`}
+        </p>
       </div>
     );
   };
@@ -93,8 +130,16 @@ export default function GanttChart({
       .filter((it) => it.start && it.end)
       .map((it) => {
         const start = new Date(it.start!);
+        // A task due on the 17th works through the 17th. Handing the library
+        // that date as-is means midnight *at the start* of it, so the bar
+        // stops a day short and a task beginning on the 18th appears to start
+        // a full day after its predecessor finished — a gap on the chart that
+        // does not exist in the plan. Ending at the start of the next day
+        // makes the two bars meet on one vertical line, which is what a
+        // dependency looks like.
         let end = new Date(it.end!);
-        if (end <= start) end = new Date(start.getTime() + 86_400_000);
+        end = new Date(end.getTime() + DAY_MS);
+        if (end <= start) end = new Date(start.getTime() + DAY_MS);
         return {
           id: it.id,
           name: it.name,
@@ -146,8 +191,15 @@ export default function GanttChart({
           listCellWidth={narrow ? "150px" : "350px"}
           columnWidth={narrow ? 44 : 62}
           barCornerRadius={4}
+          /* Room for the elbow. At the default indent a dependency between
+             adjacent rows doubles back on itself and the line is impossible
+             to follow; given space it turns once and reads at a glance. */
+          arrowIndent={narrow ? 14 : 26}
+          rowHeight={narrow ? 40 : 46}
+          barFill={58}
           TaskListHeader={makeListHeader(lang)}
           TaskListTable={makeListTable(lang)}
+          TooltipContent={makeTooltip(lang)}
           onClick={(t) => onSelect?.(t.id)}
           onDoubleClick={(t) => onSelect?.(t.id)}
         />
