@@ -6,7 +6,7 @@ import { isOpen, isAwaitingReview, weightedProgress } from "../lib/types";
 import type { Project, Task } from "../lib/types";
 import { useAuth, canManageProjects } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
-import { Avatar, ProgressBar } from "../components/ui";
+import { Avatar, ErrorCard, ProgressBar } from "../components/ui";
 import SearchBox from "../components/SearchBox";
 import { useT } from "../i18n/LanguageContext";
 import { formatDate } from "../i18n/date";
@@ -98,7 +98,7 @@ export default function Projects() {
   const [showForm, setShowForm] = useState(false);
   const [q, setQ] = useState("");
 
-  const { data: projects, isLoading } = useQuery({ queryKey: ["projects"], queryFn: api.listProjects });
+  const { data: projects, isLoading, error } = useQuery({ queryKey: ["projects"], queryFn: api.listProjects });
   const { data: allTasks } = useQuery({ queryKey: ["all_tasks"], queryFn: api.listAllTasks });
   const { data: profiles } = useQuery({ queryKey: ["profiles"], queryFn: api.listProfiles });
 
@@ -202,7 +202,9 @@ export default function Projects() {
         </form>
       )}
 
-      {isLoading ? (
+      {error ? (
+        <ErrorCard error={error} title={t("proj.loadFailed")} />
+      ) : isLoading ? (
         <p className="text-slate-500 dark:text-slate-400">{t("c.loading")}</p>
       ) : shown.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
