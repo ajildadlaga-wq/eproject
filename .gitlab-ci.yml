@@ -1,0 +1,9 @@
+pages:
+  stage: deploy
+  script:
+    - echo "Deploying OpenAPI Redoc documentation..."
+  artifacts:
+    paths:
+      - public
+  only:
+    - master   # Хэрэв танай салбар main бол main гэж өөрчилнө
