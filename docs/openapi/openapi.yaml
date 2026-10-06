@@ -63,12 +63,6 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
               example: { code: "INVALID_CREDENTIALS", message: "И-мэйл эсвэл нууц үг буруу." }
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-               schema: { $ref: '#/components/schemas/Error' }
-               example:{code: "INTERNAL_SERVER_ERROR", message: "Unexpected server error occurred."}
   /projects:
     post:
       summary: Шинэ төсөл үүсгэх (FR-12)
